@@ -80,6 +80,7 @@ let
       openvpn
       osm2pgsql
       osrm-backend
+      phpPackages.xcache
       qt4
       ssmtp
       pdf2svg
