@@ -119,6 +119,7 @@ in rec {
   fcmanage = pkgs.callPackage ./fcmanage { };
   fcsensuplugins = pkgs.callPackage ./fcsensuplugins { };
   fcuserscan = pkgs.callPackage ./fcuserscan.nix { };
+  fclogcheckhelper = pkgs.callPackage ./fclogcheckhelper { };
 
   grafana = pkgs_17_09.callPackage ./grafana { };
   graylog = pkgs.callPackage ./graylog { };
