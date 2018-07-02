@@ -85,6 +85,7 @@ let
       pdf2svg
       wkhtmltopdf
       ;
+    inherit (php56Packages) xcache;
   };
 
   # List of package names for Python packages defined in modules/flyingcircus

@@ -51,6 +51,7 @@ in rec {
     nodejs-6_x
     nodejs-8_x
     php56
+    php56Packages
     php70
     php70Packages
     php71
@@ -223,6 +224,7 @@ in rec {
 
   inherit (pkgs.callPackages ./php { })
     php55;
+  phpPackages = php56Packages;
 
   postfix = pkgs.callPackage ./postfix/3.0.nix { };
   powerdns = pkgs.callPackage ./powerdns.nix { };
