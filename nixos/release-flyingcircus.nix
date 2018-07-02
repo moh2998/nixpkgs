@@ -80,12 +80,12 @@ let
       openvpn
       osm2pgsql
       osrm-backend
-      phpPackages.xcache
       qt4
       ssmtp
       pdf2svg
       wkhtmltopdf
       ;
+    inherit (php56Packages) xcache;
   };
 
   # List of package names for Python packages defined in modules/flyingcircus
