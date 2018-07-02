@@ -67,7 +67,7 @@ with lib;
       dev = [ "172.20.2.1" "172.20.3.7" "172.20.3.57" ];
       whq = [ "212.122.41.129" "212.122.41.173" "212.122.41.169" ];
       rzob = [ "195.62.125.1" "195.62.126.130" "195.62.126.131" ];
-      rzrl1 = [ "172.24.32.1" "172.24.48.2" "172.24.48.10" ];
+      rzrl1 = [ "84.46.82.1" "172.24.48.2" "172.24.48.10" ];
 
       # We'd like to add reliable open and trustworthy DNS servers here, but
       # I didn't find reliable ones. FoeBud and Germany Privacy Foundation and
