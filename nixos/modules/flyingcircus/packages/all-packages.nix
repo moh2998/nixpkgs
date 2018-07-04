@@ -21,8 +21,8 @@ let
   pkgs_17_09_src = (import <nixpkgs> {}).fetchFromGitHub {
     owner = "NixOS";
     repo = "nixpkgs";
-    rev = "159b63a";
-    sha256 = "03hy1hlgk1h7bmgjmprc55s3nr635kznzvmspspwqw9xb2b2xcfq";
+    rev = "0d856d8";
+    sha256 = "0pqsk61kkzqqb79jp5rhn7ay5ld7h02hd8nas23qn6ibp1mv7aa1";
   };
   pkgs_17_09 = import pkgs_17_09_src {};
 
