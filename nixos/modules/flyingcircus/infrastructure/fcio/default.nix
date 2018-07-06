@@ -15,6 +15,11 @@ in
       ./telegraf.nix
   ];
 
+  environment.systemPackages = with pkgs; [
+    fcbox
+    fcmaintenance
+  ];
+
   systemd.services.qemu-guest-agent = {
     description = "The Qemu guest agent.";
     wantedBy = [ "basic.target" ];
