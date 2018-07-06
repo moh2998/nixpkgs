@@ -1,19 +1,22 @@
-{ lib, goPackages, fetchFromGitHub, stdenv, callPackage, strace, git }:
+{ lib
+, buildBowerComponents
+, callPackage
+, fetchFromGitHub
+, goPackages
+, stdenv
+}:
 
 let
-
   version = "0.14.2";
-
-  uchiwa_src = fetchFromGitHub {
+  src = fetchFromGitHub {
     owner = "sensu";
     repo = "uchiwa";
     rev = "${version}";
     sha256 = "0jzx8a0yz1s4shgb41s7d2gyjpzrasp3rj8zi4npqvr321s6xiza";
   };
 
-
-  uchiwa_go_package = goPackages.buildGoPackage rec {
-    inherit version;
+  uchiwa_go_package = goPackages.buildGoPackage {
+    inherit version src;
 
     name = "uchiwa-${version}";
     goPackagePath = "github.com/sensu/uchiwa";
@@ -48,44 +51,37 @@ let
        })
 
     ];
-
-    src = uchiwa_src;
   };
 
-  nodePackages = callPackage <nixpkgs/pkgs/top-level/node-packages.nix> {
-    self = nodePackages;
-    generated = ./packages.nix;
+  uchiwaWeb = buildBowerComponents {
+    inherit src;
+    name = "uchiwa-web";
+    generated = ./uchiwa-web-deps.nix;
   };
 
 in
 
-  stdenv.mkDerivation rec {
+stdenv.mkDerivation {
+  name="uchiwa-${version}";
+  inherit src;
 
-    name="uchiwa-${version}";
+  dontBuild = true;
+  doCheck = false;
+  installPhase = ''
+    mkdir $out
+    ln -s ${uchiwa_go_package.bin}/bin $out/bin
+    ln -s ${uchiwa_go_package}/share $out/share
+    cp -a public $out/public
+    ln -s ${uchiwaWeb}/bower_components $out/public/bower_components
+  '';
+  dontStrip = true;
+  dontPatchELF = true;
 
-    src = uchiwa_src;
-
-    buildInputs = [ uchiwa_go_package nodePackages.bower strace git ];
-
-    buildPhase = ''
-       export HOME=$(pwd)
-       bower --allow-root install
-       find public
- '';
-
-    installPhase = ''
-      mkdir -p $out/bin
-      ln -s ${uchiwa_go_package.bin}/bin/uchiwa $out/bin/uchiwa
-      ln -s ${uchiwa_go_package}/share $out/share
-      cp -a public $out/
-'';
-
-    meta = with lib; {
-      description = "Uchiwa is a simple dashboard for the Sensu monitoring framework.";
-      homepage    = http://uchiwa.io/;
-      license     = licenses.mit;
-      maintainers = with maintainers; [ theuni ];
-      platforms   = platforms.unix;
-    };
+  meta = with lib; {
+    description = "Uchiwa is a simple dashboard for the Sensu monitoring framework.";
+    homepage    = "https://uchiwa.io/";
+    license     = licenses.mit;
+    platforms   = platforms.unix;
+  };
 
 }

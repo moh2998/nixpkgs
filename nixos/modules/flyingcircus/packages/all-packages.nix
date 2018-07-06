@@ -50,9 +50,11 @@ in rec {
   inherit (pkgs_17_09)
     apacheHttpd
     audiofile
+    buildBowerComponents
     bundlerApp
     elasticsearch2
     elasticsearch5
+    fetchbower
     firefox
     ghostscript
     git
