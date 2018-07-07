@@ -42,5 +42,6 @@ in
   nodejs_6 = testFactory "nodejs6" "v6.";
   nodejs_7 = testFactory "nodejs7" "v7.";
   nodejs_8 = testFactory "nodejs8" "v8.";
+  nodejs_9 = testFactory "nodejs9" "v9.";
 }
 

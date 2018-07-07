@@ -18,25 +18,43 @@ let
 
   # Please leave the double import in place (the channel build will fail
   # otherwise).
+  pkgs_18_03_src = (import <nixpkgs> {}).fetchFromGitHub {
+    owner = "NixOS";
+    repo = "nixpkgs";
+    rev = "b6646cb";
+    sha256 = "1wm3jdkx06i9yr2hgmxap8rxhp54q2f5ds83k6iig9xjmyf4pl0a";
+  };
+  pkgs_18_03 = import pkgs_18_03_src {};
+
+  # Please leave the double import in place (the channel build will fail
+  # otherwise).
   pkgs_17_09_src = (import <nixpkgs> {}).fetchFromGitHub {
     owner = "NixOS";
     repo = "nixpkgs";
-    rev = "159b63a";
-    sha256 = "03hy1hlgk1h7bmgjmprc55s3nr635kznzvmspspwqw9xb2b2xcfq";
+    rev = "0d856d8";
+    sha256 = "0pqsk61kkzqqb79jp5rhn7ay5ld7h02hd8nas23qn6ibp1mv7aa1";
   };
   pkgs_17_09 = import pkgs_17_09_src {};
 
 in rec {
   inherit pkgs_17_09_src;
+  inherit pkgs_18_03_src;
 
   # === Imports from newer upstream versions ===
+
+  inherit (pkgs_18_03)
+    nodejs-6_x
+    nodejs-8_x
+    nodejs-9_x;
 
   inherit (pkgs_17_09)
     apacheHttpd
     audiofile
+    buildBowerComponents
     bundlerApp
     elasticsearch2
     elasticsearch5
+    fetchbower
     firefox
     ghostscript
     git
@@ -48,8 +66,6 @@ in rec {
     mailutils
     nix
     nodejs-4_x
-    nodejs-6_x
-    nodejs-8_x
     php56
     php56Packages
     php70
@@ -186,6 +202,7 @@ in rec {
   nodejs4 = nodejs-4_x;
   nodejs6 = nodejs-6_x;
   nodejs8 = nodejs-8_x;
+  nodejs9 = nodejs-9_x;
 
   inherit (pkgs.callPackage ./nodejs { libuv = pkgs.libuvVersions.v1_9_1; })
     nodejs7;

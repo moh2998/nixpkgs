@@ -15,8 +15,7 @@
         cyrus_sasl
         db
         dstat
-        fcbox
-        fcmaintenance
+        fclogcheckhelper
         fcuserscan
         file
         fio
