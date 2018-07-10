@@ -48,8 +48,13 @@ with lib;
         chown -R varnish:varnish ${cfg.stateDir}
       '';
       path = [ pkgs.gcc ];
-      serviceConfig.ExecStart = "${pkgs.varnish}/sbin/varnishd -a ${cfg.http_address} -f ${pkgs.writeText "default.vcl" cfg.config} -n ${cfg.stateDir} -u varnish";
-      serviceConfig.Type = "forking";
+      serviceConfig = {
+        ExecStart = "${pkgs.varnish}/sbin/varnishd -a ${cfg.http_address} -f ${pkgs.writeText "default.vcl" cfg.config} -n ${cfg.stateDir} -u varnish";
+        Restart = "always";
+        RestartSec = "10s";
+        StartLimitInterval = "1min";
+        Type = "forking";
+      };
     };
 
     environment.systemPackages = [ pkgs.varnish ];
