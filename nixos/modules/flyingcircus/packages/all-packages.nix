@@ -45,7 +45,8 @@ in rec {
   inherit (pkgs_18_03)
     nodejs-6_x
     nodejs-8_x
-    nodejs-9_x;
+    nodejs-9_x
+    vim;
 
   inherit (pkgs_17_09)
     apacheHttpd
