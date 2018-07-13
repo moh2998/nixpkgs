@@ -137,6 +137,7 @@ in rec {
   fcsensuplugins = pkgs.callPackage ./fcsensuplugins { };
   fcuserscan = pkgs.callPackage ./fcuserscan.nix { };
   fclogcheckhelper = pkgs.callPackage ./fclogcheckhelper { };
+  fix-so-rpath = pkgs.callPackage ./fix-so-rpath {};
 
   grafana = pkgs_17_09.callPackage ./grafana { };
   graylog = pkgs.callPackage ./graylog { };

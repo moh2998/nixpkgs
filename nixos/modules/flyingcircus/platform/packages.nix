@@ -19,6 +19,7 @@
         fcuserscan
         file
         fio
+        fix-so-rpath
         gcc
         gdb
         gdbm
