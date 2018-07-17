@@ -45,7 +45,9 @@ in rec {
   inherit (pkgs_18_03)
     nodejs-6_x
     nodejs-8_x
-    nodejs-9_x;
+    nodejs-9_x
+    pipenv
+    vim;
 
   inherit (pkgs_17_09)
     apacheHttpd
@@ -136,6 +138,7 @@ in rec {
   fcsensuplugins = pkgs.callPackage ./fcsensuplugins { };
   fcuserscan = pkgs.callPackage ./fcuserscan.nix { };
   fclogcheckhelper = pkgs.callPackage ./fclogcheckhelper { };
+  fix-so-rpath = pkgs.callPackage ./fix-so-rpath {};
 
   grafana = pkgs_17_09.callPackage ./grafana { };
   graylog = pkgs.callPackage ./graylog { };

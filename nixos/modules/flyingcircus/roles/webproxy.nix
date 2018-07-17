@@ -81,6 +81,9 @@ in
 
       serviceConfig = {
         ExecStart = (lib.mkOverride 99 varnish_);
+        Restart = "on-failure";
+        RestartSec = "1s";
+        StartLimitInterval = "1min";
       };
     };
 
