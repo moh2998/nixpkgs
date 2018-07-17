@@ -46,6 +46,7 @@ in rec {
     nodejs-6_x
     nodejs-8_x
     nodejs-9_x
+    pipenv
     vim;
 
   inherit (pkgs_17_09)
