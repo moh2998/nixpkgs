@@ -44,8 +44,8 @@ import ../../../tests/make-test.nix ({ lib, pkgs, ... }:
   testScript = ''
     $machine->waitForUnit("nginx.service");
     $machine->waitForUnit("haproxy.service");
-    $machine->waitForUnit("graylog.service");
     $machine->waitForUnit("mongodb.service");
     $machine->waitForUnit("elasticsearch.service");
+    $machine->waitForUnit("graylog.service");
   '';
 })
