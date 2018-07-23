@@ -322,10 +322,11 @@ in
             slack
           ];
         extraConfig = let
+            slash = addr: if fclib.isIp4 addr then "/32" else "/128";
             trustedProxies =
               concatStringsSep ", " (
                 map
-                  (a: "${fclib.stripNetmask a.ip}/${if fclib.isIp4 a.ip then "32" else "128"}")
+                  (a: (fclib.stripNetmask a.ip) + (slash a.ip))
                   (filter
                     (a: builtins.elem "${a.name}.${config.networking.domain}" glNodes)
                     config.flyingcircus.enc_addresses.srv));
