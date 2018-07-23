@@ -2,13 +2,13 @@
 
 let
   pname = "vulnix";
-  version = "1.7";
+  version = "1.7.1";
   python = import ./requirements.nix { inherit pkgs; };
   src = fetchFromGitHub {
     owner = "flyingcircusio";
     repo = "vulnix";
     rev = version;
-    sha256 = "1vwnp7szff7a0rjqkc9n4jkb884fpmgm7ix7527c635cq0i37ycb";
+    sha256 = "1jv98cx7pv2aa8mlx57fpx8dvq4h6gy7nzr9qs047gfj4fqzvgzy";
   };
 
 in
