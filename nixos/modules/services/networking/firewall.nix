@@ -23,6 +23,8 @@
 with lib;
 
 let
+  rulesDir = "/var/lib/firewall";
+  confMarker = "${rulesDir}/configuration-in-progress";
 
   cfg = config.networking.firewall;
 
@@ -196,30 +198,47 @@ let
     ${cfg.extraStopCommands}
   '';
 
-  reloadScript = writeShScript "firewall-reload" ''
-    ${helpers}
+  generateRules = pkgs.writeScript "generate-firewall-rules" ''
+    #! ${pkgs.stdenv.shell} -e
+    export PATH=${pkgs.iproute}/bin:$PATH
+    echo -n "Executing firewall scripts in netns fcio-firewall ... "
+    ip netns del fcio-firewall 2>/dev/null || true
+    ip netns add fcio-firewall
+    ip netns exec fcio-firewall "$@"
+    ip netns exec fcio-firewall iptables-save > ${rulesDir}/iptables-save
+    ip netns exec fcio-firewall ip6tables-save > ${rulesDir}/ip6tables-save
+    ip netns del fcio-firewall
+    echo "done."
+  '';
 
-    # Create a unique drop rule
-    ip46tables -D INPUT -j nixos-drop 2>/dev/null || true
-    ip46tables -F nixos-drop 2>/dev/null || true
-    ip46tables -X nixos-drop 2>/dev/null || true
-    ip46tables -N nixos-drop
+  # Generally rely on saved rules as we don't expect network connectivity at
+  # this point. This is expected to fail if rules are not available.
+  atomicStart = writeShScript "firewall-atomic-start" ''
+    echo -n "Loading firewall rules from ${rulesDir} ... "
+    touch ${confMarker}
+    iptables-restore ${rulesDir}/iptables-save
+    ip6tables-restore ${rulesDir}/ip6tables-save
+    rm -f ${confMarker}
+    echo "done."
+  '';
 
-    # FCIO: Allow DNS during firewall reload
-    ip46tables -A nixos-drop -p udp --sport 53 -j ACCEPT
-    ip46tables -A nixos-drop -p udp --dport 53 -j ACCEPT
+  # Run the startScript in a separate network namespace. If this succeeds,
+  # dump/restore the config into the default namespace. In case of error, the
+  # old firewall configuration stays active and CHECK_IPTABLES alerts.
+  atomicReload = writeShScript "firewall-atomic-reload" ''
+    touch ${confMarker}
+    ${generateRules} ${startScript}
+    ${atomicStart}
+    rm -f ${confMarker}
+  '';
 
-    ip46tables -A nixos-drop -j DROP
-
-    # Don't allow traffic to leak out until the script has completed
-    ip46tables -A INPUT -j nixos-drop
-    if ${startScript}; then
-      ip46tables -D INPUT -j nixos-drop 2>/dev/null || true
-    else
-      echo "Failed to reload firewall... Stopping"
-      ${stopScript}
-      exit 1
-    fi
+  # Dump active firewall configuration just before shutdown so we can load it
+  # during system startup without having access to network connectivity.
+  atomicStop = writeShScript "firewall-atomic-stop" ''
+    touch ${confMarker}
+    ${generateRules} ${startScript}
+    ${stopScript}
+    rm -f ${confMarker}
   '';
 
   kernelPackages = config.boot.kernelPackages;
@@ -471,6 +490,8 @@ in
                      message = "This kernel does not support disabling conntrack helpers"; }
                  ];
 
+    system.activationScripts.firewall = "install -d ${rulesDir}";
+
     systemd.services.firewall = {
       description = "Firewall";
       # XXX FCIO we need functioning networking while starting the firewall.
@@ -495,9 +516,9 @@ in
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
-        ExecStart = "@${startScript} firewall-start";
-        ExecReload = "@${reloadScript} firewall-reload";
-        ExecStop = "@${stopScript} firewall-stop";
+        ExecStart = atomicStart;
+        ExecReload = atomicReload;
+        ExecStop = atomicStop;
       };
     };
 
