@@ -37,6 +37,8 @@ let
   pkgs_17_09 = import pkgs_17_09_src {};
 
 in rec {
+
+  # Important: register these sources in platform/garbagecollect/default.nix!
   inherit pkgs_17_09_src;
   inherit pkgs_18_03_src;
 
