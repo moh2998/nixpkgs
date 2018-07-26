@@ -74,6 +74,7 @@ in {
         # not referenced anywhere else. We mention them here to protect them
         # from garbage collection.
         ${pkgs.pkgs_17_09_src}
+        ${pkgs.pkgs_18_03_src}
       '';
     }
 
