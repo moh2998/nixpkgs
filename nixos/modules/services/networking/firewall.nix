@@ -216,6 +216,11 @@ let
   atomicStart = writeShScript "firewall-atomic-start" ''
     echo -n "Loading firewall rules from ${rulesDir} ... "
     touch ${confMarker}
+    if ! [[ -e ${rulesDir}/iptables-save && -e ${rulesDir}/ip6tables-save ]]
+    then
+      echo "no saved rules found, generating (may fail)"
+      ${generateRules} ${startScript}
+    fi
     iptables-restore ${rulesDir}/iptables-save
     ip6tables-restore ${rulesDir}/ip6tables-save
     rm -f ${confMarker}
@@ -235,10 +240,8 @@ let
   # Dump active firewall configuration just before shutdown so we can load it
   # during system startup without having access to network connectivity.
   atomicStop = writeShScript "firewall-atomic-stop" ''
-    touch ${confMarker}
     ${generateRules} ${startScript}
     ${stopScript}
-    rm -f ${confMarker}
   '';
 
   kernelPackages = config.boot.kernelPackages;
@@ -494,15 +497,10 @@ in
 
     systemd.services.firewall = {
       description = "Firewall";
-      # XXX FCIO we need functioning networking while starting the firewall.
-      # Some firewall scripts include hostnames and those won't run
-      # properly during initial startup when we don't have network yet.
-      # This isn't ideal either (see Case 101736) but it helps counter obvious
-      # breakage.
-      # See also Case 101736
-      wantedBy = [ "network.target" ];
-      before = [ "network.target" ];
-      after = [ "systemd-modules-load.service" "network-local-commands.service" ];
+      wantedBy = [ "basic.target" ];
+      wants = [ "network-pre.target" ];
+      before = [ "network-pre.target" ];
+      after = [ "systemd-modules-load.service" ];
 
       path = [ pkgs.iptables ] ++ cfg.extraPackages;
 

@@ -10,6 +10,8 @@
   elasticsearch5 = hydraJob
     (import ./elasticsearch.nix { rolename = "elasticsearch5"; });
 
+  firewall = hydraJob (import ./firewall/atomic.nix { inherit system; });
+
   graylog = hydraJob (import ./graylog.nix { inherit system; });
 
   haproxy = hydraJob (import ./haproxy.nix { inherit system; });

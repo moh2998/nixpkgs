@@ -1,0 +1,3 @@
+ip46tables -N custom-drop
+ip46tables -A custom-drop -j DROP
+ip46tables -A nixos-fw -s example.com -p tcp --dport 2827 -j custom-drop

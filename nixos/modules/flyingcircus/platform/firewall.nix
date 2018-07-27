@@ -28,24 +28,31 @@ let
       else:
         fn = fileinput.filename()
         print('ERROR: only iptables statements or comments allowed:'
-              '\n{}\n(included from /etc/local/firewall/{})'.\
+              '\n{}\n(included from ${cfg.firewall.localDir}/{})'.\
               format(line.strip(), p.basename(fn)),
               file=sys.stderr)
         sys.exit(1)
   '';
 
-  etcLocalFirewall =
+  localRules =
   let
     suf = lib.hasSuffix;
-  in (filterSource
+  in lib.optionalString (pathExists cfg.firewall.localDir)
+  (filterSource
     (p: t: t != "directory" && !(suf "~" p) && !(suf "/README" p))
-    /etc/local/firewall);
+    cfg.firewall.localDir);
 
-  localRules = pkgs.runCommand "firewall-local-rules" {
-    inherit etcLocalFirewall;
+  filteredRules = pkgs.runCommand "firewall-local-rules" {
+    inherit localRules;
     preferLocalBuild = true;
   }
-  "${filterRules} $etcLocalFirewall/* > $out";
+  ''
+    if [[ -d $localRules ]]; then
+      ${filterRules} $localRules/* > $out
+    else
+      touch $out
+    fi
+  '';
 
   rgAddrs = map (e: e.ip) cfg.enc_addresses.srv;
   rgRules = lib.optionalString
@@ -72,6 +79,14 @@ let
 
 in
 {
+  options = {
+    flyingcircus.firewall.localDir = lib.mkOption {
+      type = lib.types.path;
+      default = "/etc/local/firewall";
+      description = "Directory containing firewall configuration snippets.";
+    };
+  };
+
   config = {
     environment.etc."local/firewall/README".text = ''
       Add local firewall rules in configuration file snippets. Firewall rules
@@ -130,12 +145,12 @@ in
         rg = lib.optionalString
           (rgRules != "")
           "# Accept traffic within the same resource group.\n${rgRules}\n\n";
-        local = "# Local firewall rules.\n${readFile localRules}\n";
+        local = "# Local firewall rules.\n${readFile filteredRules}\n";
       in rg + local;
     };
 
     system.activationScripts.local-firewall = {
-      text = "install -d -o root -g service -m 02775 /etc/local/firewall";
+      text = "install -d -o root -g service -m 02775 ${cfg.firewall.localDir}";
       deps = [ "users" "groups" ];
     };
   };
