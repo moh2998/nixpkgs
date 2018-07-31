@@ -45,6 +45,7 @@ in rec {
   # === Imports from newer upstream versions ===
 
   inherit (pkgs_18_03)
+    bazaar
     nodejs-6_x
     nodejs-8_x
     nodejs-9_x
