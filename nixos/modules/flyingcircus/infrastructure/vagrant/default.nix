@@ -29,8 +29,21 @@ in
   # In vagrant the location is set to vagrant to fix various other settings.
   flyingcircus.enc.parameters.location = "vagrant";
 
-  # Enable DHCP on eth0 for vagrant to be able to actually do things.
-  networking.interfaces.eth0.useDHCP = true;
+  # Rename eth0 to ethsrv. A lot of code expects ethsrv to be there. We
+  # Also need to rename eth1 to eth*x*fe, so it sorts *after* ethsrv: The
+  # Vagrant NixOS provisioner expects the interfaces to be sorted (in ifconfig
+  # output) according to the NIC definition. For virtual box eth0 is configured
+  # with NAT, and is used for vagrant's own communication. It makes sense that
+  # this becomes ethsrv, as you cannot communicate with it directly. eth1 on
+  # the other hand is explicitly added via Vagrantfile (if needed) via
+  # somethting like `config.vm.network "private_network", ip: "192.168.50.4"`.
+  services.udev.extraRules = ''
+    SUBSYSTEM=="net", KERNEL=="eth0", NAME="ethsrv"
+    SUBSYSTEM=="net", KERNEL=="eth1", NAME="ethxfe"
+  '';
+
+  # Enable DHCP for vagrant to be able to actually do things.
+  networking.interfaces.ethsrv.useDHCP = true;
 
   # Enable guest additions.
   virtualisation.virtualbox.guest.enable = true;
