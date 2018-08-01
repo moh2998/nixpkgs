@@ -215,15 +215,14 @@ let
   # this point. This is expected to fail if rules are not available.
   atomicStart = writeShScript "firewall-atomic-start" ''
     echo -n "Loading firewall rules from ${rulesDir} ... "
-    touch ${confMarker}
     if ! [[ -e ${rulesDir}/iptables-save && -e ${rulesDir}/ip6tables-save ]]
     then
       echo "no saved rules found, generating (may fail)"
-      ${generateRules} ${startScript}
+      ${atomicReload}
+    else
+      iptables-restore ${rulesDir}/iptables-save
+      ip6tables-restore ${rulesDir}/ip6tables-save
     fi
-    iptables-restore ${rulesDir}/iptables-save
-    ip6tables-restore ${rulesDir}/ip6tables-save
-    rm -f ${confMarker}
     echo "done."
   '';
 
@@ -233,7 +232,8 @@ let
   atomicReload = writeShScript "firewall-atomic-reload" ''
     touch ${confMarker}
     ${generateRules} ${startScript}
-    ${atomicStart}
+    iptables-restore ${rulesDir}/iptables-save
+    ip6tables-restore ${rulesDir}/ip6tables-save
     rm -f ${confMarker}
   '';
 
