@@ -107,11 +107,6 @@ in {
         } ];
       };
 
-      # remove after 2018-01-25
-      system.activationScripts.fc-collect-garbage = ''
-        rm -f /var/lib/fc-collect-garbage.stamp
-      '';
-
       systemd.timers.fc-collect-garbage = {
         description = "Timer for fc-collect-garbage";
         wantedBy = [ "timers.target" ];

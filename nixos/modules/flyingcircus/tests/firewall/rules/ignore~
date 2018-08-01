@@ -1,0 +1,2 @@
+# This file ends with "~" and should be ignored
+ip46tables -A nixos-fw -p tcp --dport 3097 -j REJECT
