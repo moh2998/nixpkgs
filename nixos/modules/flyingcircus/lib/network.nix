@@ -56,6 +56,15 @@ rec {
       (s: s.service == service)
       config.flyingcircus.enc_services));
 
+  listServiceIPs = config: service:
+  (lib.flatten
+    (map
+      (service: service.ips)
+      (filter
+        (s: s.service == service)
+        config.flyingcircus.enc_services)));
+
+
   # Return service address (string) or null, if no service
   listServiceAddress = config: service:
     let
