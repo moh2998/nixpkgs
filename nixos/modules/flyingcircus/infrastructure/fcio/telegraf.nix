@@ -107,12 +107,13 @@ in mkMerge [
     };
 
     networking.firewall.extraCommands =
-      let
-        statsHost = fclib.listServiceAddress config "statshostproxy-collector";
-      in optionalString (statsHost != null) ''
-        ip46tables -A nixos-fw -i ethsrv -s ${statsHost} \
-          -p tcp --dport ${port} -j nixos-fw-accept
-      '';
+      "# fcio/telegraf\n" + (concatStringsSep ""
+        (map
+          (ip: ''
+            ${fclib.iptables ip} -A nixos-fw -i ethsrv -s ${ip} \
+              -p tcp --dport ${port} -j nixos-fw-accept
+          '')
+          (fclib.listServiceIPs config "statshostproxy-collector")));
 
     flyingcircus.roles.statshost.prometheusMetricRelabel =
       let

@@ -3,23 +3,22 @@
 with lib;
 let
   fclib = import ../../lib;
-  # This doesn't work, because it returns the SRV name, we need FE.
-  # statshostService = lib.findFirst
-  #   (s: s.service == "statshost-collector")
-  #   null
-  #   config.flyingcircus.enc_services;
-  statshostService = "stats.flyingcircus.io";
+  statshostServiceIPs = fclib.listServiceIPs config "statshost-collector";
   port = 9090;
 in
 {
   config = mkIf (
       config.flyingcircus.roles.statshostproxy.enable &&
-      statshostService != null) {
+      statshostServiceIPs != []) {
 
-    networking.firewall.extraCommands = ''
-      ip46tables -A nixos-fw -i ethfe -s ${statshostService} \
-        -p tcp --dport ${toString port} -j nixos-fw-accept
-    '';
+    networking.firewall.extraCommands =
+     "# statshost-collector\n" + concatStringsSep ""
+        (map
+          (ip: ''
+            ${fclib.iptables ip} -A nixos-fw -i ethfe -s ${ip} -p tcp \
+              --dport ${toString port} -j nixos-fw-accept
+          '')
+          statshostServiceIPs);
 
     flyingcircus.roles.nginx.enable = true;
     flyingcircus.roles.nginx.httpConfig = ''
