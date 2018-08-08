@@ -15,6 +15,7 @@ in
 
   imports = [
      ./antivirus.nix
+     ./apache.nix
      ./compat.nix
      ./datadog.nix
      ./dovecot.nix
