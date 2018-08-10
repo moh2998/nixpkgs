@@ -14,7 +14,7 @@ rec {
   # Get all regular files with their absolute name
   files = path:
     (map
-      (filename: path + "/" + filename)
+      (filename: path + ("/" + filename))
       (filesRel path));
 
   # Reads the config file if it exists, else returns predefined default
