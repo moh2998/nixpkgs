@@ -55,6 +55,8 @@ in rec {
     php70Packages
     php71
     php71Packages
+    php72
+    php72Packages
     pipenv
     vim;
 
