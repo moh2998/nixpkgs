@@ -79,12 +79,6 @@ in rec {
     mailutils
     nix
     nodejs-4_x
-    php56
-    php56Packages
-    php70
-    php70Packages
-    php71
-    php71Packages
     prometheus
     prometheus-haproxy-exporter
     python35
