@@ -49,6 +49,8 @@ in rec {
     nodejs-6_x
     nodejs-8_x
     nodejs-9_x
+    php56
+    php56Packages
     pipenv
     vim;
 
