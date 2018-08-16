@@ -56,12 +56,17 @@ in rec {
     nginxModules
     nodejs-10_x
     prometheus-haproxy-exporter
-    ;
+    bazaar
+    nodejs-6_x
+    nodejs-8_x
+    nodejs-9_x
+    pipenv
+    shadow
+    vim;
 
   inherit (pkgs_18_03)
     apacheHttpd
     audiofile
-    bazaar
     buildBowerComponents  # XXX doesn't build in isolation
     bundlerApp            # XXX doesn't build in isolation
     docker
@@ -79,9 +84,6 @@ in rec {
     libreoffice-fresh
     mailutils
     nix
-    nodejs-6_x
-    nodejs-8_x
-    nodejs-9_x
     openvpn
     php56
     php56Packages
@@ -91,7 +93,6 @@ in rec {
     php71Packages
     php72
     php72Packages
-    pipenv
     python35
     python35Packages
     python36
@@ -102,7 +103,6 @@ in rec {
     samba
     strongswan
     subversion18
-    vim
     virtualbox
     wkhtmltopdf
     xulrunner
