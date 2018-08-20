@@ -118,4 +118,10 @@ in {
     sha256 = "b97952e3af02dc1e446f9c4188ff53021cc0eed7ed96f254ae6daf968c443e2e";
   };
 
+  postgresql100 = common {
+    version = "10.5";
+    psqlSchema = "10.0";
+    sha256 = "6c8e616c91a45142b85c0aeb1f29ebba4a361309e86469e0fb4617b6a73c4011";
+  };
+
 }
