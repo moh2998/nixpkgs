@@ -1,7 +1,7 @@
 { stdenv, fetchFromGitHub, postgresql }:
 
 let
-  version = "0.1";
+  version = "1.2.1";
 in
 stdenv.mkDerivation {
   name = "rum-${version}";
@@ -10,7 +10,7 @@ stdenv.mkDerivation {
     rev = "${version}";
     owner = "postgrespro";
     repo = "rum";
-    sha256 = "0qbscy7nl8djnkh4anvywxq47zlamsi5bh08qcnmh4dwkny2931i";
+    sha256 = "1k67gg1mlw7299yf67xm7d4rsq9xrkqql1grkgpyyc23dp1dkad4";
   };
 
   buildInputs = [ postgresql ];
@@ -24,6 +24,6 @@ stdenv.mkDerivation {
      mkdir -p $out/{bin,lib}
      cp ./rum.so $out/lib
      mkdir -p $out/share/extension
-     cp ./rum.control ./rum--1.0.sql $out/share/extension
+     cp ./rum.control ./rum--1.0.sql ./rum--1.2.sql $out/share/extension
    '';
  }
