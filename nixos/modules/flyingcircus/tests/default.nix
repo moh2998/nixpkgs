@@ -3,6 +3,8 @@
 {
   apache = hydraJob (import ./apache.nix { inherit system; });
 
+  clamav = hydraJob (import ./clamav.nix { inherit system; });
+
   docsplit = hydraJob (import ./docsplit { inherit system; });
 
   elasticsearch = hydraJob
