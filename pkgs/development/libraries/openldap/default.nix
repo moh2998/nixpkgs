@@ -1,15 +1,12 @@
 { stdenv, fetchurl, openssl, cyrus_sasl, db, groff }:
 
 stdenv.mkDerivation rec {
-  name = "openldap-2.4.42";
+  name = "openldap-2.4.46";
 
   src = fetchurl {
     url = "http://www.openldap.org/software/download/OpenLDAP/openldap-release/${name}.tgz";
-    sha256 = "0qwfpb5ipp2l76v11arghq5mr0sjc6xhjfg8a0kgsaw5qpib1dzf";
+    sha1 = "a9ae2273eb9bdd70090dafe0d018a3132606bef6";
   };
-
-  # Should be removed with >=2.4.43
-  patches = [ ./CVE-2015-6908.patch ];
 
   outputs = [ "out" "man" ];
 
