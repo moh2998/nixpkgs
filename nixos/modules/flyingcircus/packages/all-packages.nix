@@ -50,6 +50,14 @@ in rec {
     nodejs-8_x
     nodejs-9_x
     openvpn
+    php56
+    php56Packages
+    php70
+    php70Packages
+    php71
+    php71Packages
+    php72
+    php72Packages
     pipenv
     vim;
 
@@ -72,12 +80,6 @@ in rec {
     mailutils
     nix
     nodejs-4_x
-    php56
-    php56Packages
-    php70
-    php70Packages
-    php71
-    php71Packages
     prometheus
     prometheus-haproxy-exporter
     python35
