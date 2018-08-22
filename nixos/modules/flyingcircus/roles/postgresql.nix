@@ -16,6 +16,8 @@ let
       then "9.5"
       else if cfg.roles.postgresql96.enable
       then "9.6"
+      else if cfg.roles.postgresql10.enable
+      then "10"
       else null;
 
 
@@ -27,6 +29,7 @@ let
     "9.4" = pkgs.postgresql94;
     "9.5" = pkgs.postgresql95;
     "9.6" = pkgs.postgresql96;
+    "10" = pkgs.postgresql100;
   };
 
   current_memory = fclib.current_memory config 256;
@@ -100,6 +103,13 @@ in
         type = types.bool;
         default = false;
         description = "Enable the Flying Circus PostgreSQL 9.6 server role.";
+      };
+    };
+    flyingcircus.roles.postgresql10 = {
+      enable = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Enable the Flying Circus PostgreSQL 10.x server role.";
       };
     };
 

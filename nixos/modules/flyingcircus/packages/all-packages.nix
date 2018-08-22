@@ -49,6 +49,7 @@ in rec {
     nodejs-6_x
     nodejs-8_x
     nodejs-9_x
+    openvpn
     php56
     php56Packages
     php70
@@ -244,7 +245,8 @@ in rec {
     postgresql93
     postgresql94
     postgresql95
-    postgresql96;
+    postgresql96
+    postgresql100;
 
   rum = pkgs.callPackage ./postgresql/rum { postgresql = postgresql96; };
 
