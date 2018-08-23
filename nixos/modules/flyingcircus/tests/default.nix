@@ -3,6 +3,8 @@
 {
   apache = hydraJob (import ./apache.nix { inherit system; });
 
+  clamav = hydraJob (import ./clamav.nix { inherit system; });
+
   docsplit = hydraJob (import ./docsplit { inherit system; });
 
   elasticsearch = hydraJob
@@ -48,6 +50,8 @@
     (import ./postgresql.nix { rolename = "postgresql95"; });
   postgresql_9_6 = hydraJob
     (import ./postgresql.nix { rolename = "postgresql96"; });
+  postgresql_10 = hydraJob
+    (import ./postgresql.nix { rolename = "postgresql10"; });
 
   prometheus = hydraJob (import ./prometheus.nix { inherit system; });
 

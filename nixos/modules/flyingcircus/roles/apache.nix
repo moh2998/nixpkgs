@@ -4,14 +4,12 @@ let
   cfg = config.flyingcircus;
   fclib = import ../lib;
 
-  confFiles =
-    filter
-      (filename: hasSuffix ".conf" filename)
-     (fclib.files /etc/local/apache);
-  hasLocalConfig =
-    (pathExists /etc/local/apache) &&
-    (confFiles != []);  # Apache dies, if there are no *.conf
+  localConfigFiles = filter
+    (filename: hasSuffix ".conf" filename)
+    (fclib.files "/etc/local/apache");
+  hasLocalConfig = localConfigFiles != [];
   localConfig =
+    # Apache dies, if there is no *.conf file
     if hasLocalConfig
     then "Include ${/etc/local/apache}/*.conf"
     else "";
@@ -42,6 +40,7 @@ in
     services.httpd.adminAddr = "nobody@example.com";
     services.httpd.multiProcessingModule = "worker";
     services.httpd.port = serverStatusPort;
+    services.httpd.extraModules = [ "deflate" "filter" "proxy_fcgi" ];
 
     services.httpd.extraConfig = ''
       ExtendedStatus on
