@@ -72,8 +72,8 @@ let
 
 in
 pgDerivationBaseNewer.merge (fix: {
-    version = "2.4.0";
-    sha256 = "02baa90f04da41e04b6c18eedfda53110c45ae943d4e65050f6d202f7de07d29";
+    version = "2.4.4";
+    sha256 = "0663efb589210d5048d95c817e5cf29552ec8180e16d4c6ef56c94255faca8c2";
     sql_srcs = ["postgis.sql" "spatial_ref_sys.sql"];
     builtInputs = [gdal json_c pkgconfig];
 
