@@ -101,6 +101,7 @@ in rec {
   libvorbis = mergeOutputs [ "out" "dev" ] pkgs_17_09.libvorbis;
   libjpeg-turbo = mergeOutputs [ "out" "bin" "dev" ] pkgs_17_09.libjpeg;
   libjpeg = libjpeg-turbo;
+  json_c = mergeOutputs [ "out" "bin" "dev" ] pkgs_18_03.json_c;
 
   # === Own ports ===
 
