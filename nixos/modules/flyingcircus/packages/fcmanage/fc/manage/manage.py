@@ -55,7 +55,8 @@ class Channel:
             except (requests.exceptions.ConnectionError,
                     requests.packages.urllib3.exceptions.ConnectionError):
                 logging.warning(
-                    'Cannot reach hydra, falling back to local build')
+                    'Cannot reach hydra, falling back to local build (%s)',
+                    url)
                 self.hydra_reachable = False
                 break
             if response.is_redirect:
@@ -308,7 +309,6 @@ def build_channel_with_maintenance(build_options):
     # always rebuild current channel (ENC updates, activation scripts etc.)
     current_channel = Channel.current('nixos')
     if current_channel:
-        logging.info('Rebuilding {}'.format(current_channel))
         current_channel.switch(build_options)
     # scheduled update already present?
     if Channel.current('next'):
@@ -320,7 +320,9 @@ def build_channel_with_maintenance(build_options):
             return
     # scheduled update available?
     next_channel = Channel(enc['parameters'].get('environment_url'))
-    if next_channel and next_channel != current_channel:
+    if not next_channel:
+        return
+    if next_channel != current_channel and next_channel.hydra_reachable:
         logging.info('Preparing switch from {} to {}.'.format(
             current_channel, next_channel))
         next_channel.prepare_maintenance()
