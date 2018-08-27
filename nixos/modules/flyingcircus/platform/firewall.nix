@@ -44,7 +44,6 @@ let
 
   filteredRules = pkgs.runCommand "firewall-local-rules" {
     inherit localRules;
-    preferLocalBuild = true;
   }
   ''
     if [[ -d $localRules ]]; then
