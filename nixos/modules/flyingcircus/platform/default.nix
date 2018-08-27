@@ -182,15 +182,21 @@ in
 
   config = {
 
-    nix.binaryCachePublicKeys = [
-      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-      "flyingcircus.io-1:Rr9CwiPv8cdVf3EQu633IOTb6iJKnWbVfCC8x8gVz2o="
-    ];
+    nix = {
+      binaryCachePublicKeys = [
+        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+        "flyingcircus.io-1:Rr9CwiPv8cdVf3EQu633IOTb6iJKnWbVfCC8x8gVz2o="
+      ];
 
-    nix.binaryCaches = [
-      https://cache.nixos.org
-      https://hydra.flyingcircus.io
-    ];
+      binaryCaches = [
+        https://cache.nixos.org
+        https://hydra.flyingcircus.io
+      ];
+
+      extraOptions = ''
+        fallback = true
+      '';
+    };
 
     flyingcircus.enc = lib.optionalAttrs cfg.load_enc enc;
     flyingcircus.enc_services = enc_services;

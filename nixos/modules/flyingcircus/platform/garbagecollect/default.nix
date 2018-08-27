@@ -23,6 +23,9 @@ let
     started=$(date +%s)
     failed=0
     while read user home; do
+      if [[ $home == /var/empty ]]; then
+        continue
+      fi
       sudo -u $user -H -- \
         fc-userscan -v -S -s 2 -c $home/.cache/fc-userscan.cache -L 10000000 \
         -z '*.egg' -E ${./userscan.exclude} \

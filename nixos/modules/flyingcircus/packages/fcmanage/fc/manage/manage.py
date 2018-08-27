@@ -37,18 +37,28 @@ nixos-rebuild switch
 nix-channel --remove next
 """
 
+
 class Channel:
 
     PHRASES = re.compile('would (\w+) the following units: (.*)$')
 
     # global, to avoid re-connecting (with ssl handshake and all)
     session = requests.session()
+    hydra_reachable = True
 
     def __init__(self, url):
         self.url = self.resolved_url = url
         while True:
-            response = self.session.head(self.resolved_url)
-            response.raise_for_status()
+            try:
+                response = self.session.head(self.resolved_url, timeout=60)
+                response.raise_for_status()
+            except (requests.exceptions.ConnectionError,
+                    requests.packages.urllib3.exceptions.ConnectionError):
+                logging.warning(
+                    'Cannot reach hydra, falling back to local build (%s)',
+                    url)
+                self.hydra_reachable = False
+                break
             if response.is_redirect:
                 self.resolved_url = response.headers['location']
             else:
@@ -138,8 +148,8 @@ class Channel:
             else:
                 return ''
 
-        notifications = list(filter(None, (notify(cat)
-                         for cat in ['stop', 'restart', 'start', 'reload'])))
+        notifications = list(filter(None, (
+            notify(cat) for cat in ['stop', 'restart', 'start', 'reload'])))
         msg = ['System update to {}'.format(self)] + notifications
         if len(msg) > 1:  # add trailing newline if output is multi-line
             msg += ['']
@@ -299,7 +309,6 @@ def build_channel_with_maintenance(build_options):
     # always rebuild current channel (ENC updates, activation scripts etc.)
     current_channel = Channel.current('nixos')
     if current_channel:
-        logging.info('Rebuilding {}'.format(current_channel))
         current_channel.switch(build_options)
     # scheduled update already present?
     if Channel.current('next'):
@@ -311,7 +320,9 @@ def build_channel_with_maintenance(build_options):
             return
     # scheduled update available?
     next_channel = Channel(enc['parameters'].get('environment_url'))
-    if next_channel and next_channel != current_channel:
+    if not next_channel:
+        return
+    if next_channel != current_channel and next_channel.hydra_reachable:
         logging.info('Preparing switch from {} to {}.'.format(
             current_channel, next_channel))
         next_channel.prepare_maintenance()
@@ -327,10 +338,12 @@ def build_channel(build_options):
             channel = Channel(enc['parameters']['environment_url'])
         else:
             channel = Channel.current('nixos')
-        if channel:
+        if not channel:
+            return
+        if channel.hydra_reachable:
             channel.load('nixos')
-            channel.switch(build_options)
-            BuildState().set_channel()
+        channel.switch(build_options)
+        BuildState().set_channel()
     except Exception:
         logging.exception('Error switching channel')
         sys.exit(1)
