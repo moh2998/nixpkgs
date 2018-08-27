@@ -37,7 +37,7 @@ openlog("nixos", "", LOG_USER);
 
 my $currentSystem = readlink("/run/current-system");
 if ($currentSystem eq $out) {
-    print "lazy activation: not activating unchanged configuration";
+    print "lazy activation: not activating unchanged configuration\n";
     exit 0;
 }
 
