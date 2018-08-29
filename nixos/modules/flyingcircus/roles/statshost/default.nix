@@ -371,6 +371,11 @@ in
     # An actual statshost. Enable Prometheus.
     (mkIf (cfgStatsGlobal.enable || cfgStatsRG.enable) {
 
+      systemd.services.prometheus.serviceConfig = {
+        # Prometheus can take a few minutes to shut down. If it is forcefully
+        # killed, a crash recovery process is started, which takes even longer.
+        TimeoutStopSec = "10m";
+      };
       services.prometheus.enable = true;
       services.prometheus.extraFlags = promFlags;
       services.prometheus.listenAddress = prometheusListenAddress;
