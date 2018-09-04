@@ -280,7 +280,7 @@ in
         ];
       };
 
-      boot.kernel.sysctl."net.core.rmem_max" = 8388608;
+      boot.kernel.sysctl."net.core.rmem_max" = lib.mkOverride 90 25165824;
 
       services.collectdproxy.statshost.enable = true;
       services.collectdproxy.statshost.send_to =

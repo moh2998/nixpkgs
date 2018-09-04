@@ -244,6 +244,7 @@ in
       # work around CVE-2016-5696
       # obsolete on Linux 4.7+
       "net.ipv4.tcp_challenge_ack_limit" = "999999999";
+      "net.core.rmem_max" = 8388608;
     };
   };
 }
