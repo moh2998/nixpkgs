@@ -43,7 +43,7 @@ in stdenv.mkDerivation rec {
   };
 
   # don't pass these vars to the builder
-  removeAttrs = ["sql_comments" "sql_srcs"];
+  removeAttrs = [ "sql_comments" "sql_srcs" ];
 
   preInstall = ''
     mkdir -p $out/bin
@@ -62,10 +62,10 @@ in stdenv.mkDerivation rec {
 
   sql_comments = "postgis_comments.sql";
 
-  sql_srcs = ["postgis.sql" "spatial_ref_sys.sql"];
+  sql_srcs = [ "postgis.sql" "spatial_ref_sys.sql" ];
 
   # postgis config directory assumes /include /lib from the same root for json-c library
-  # NIX_LDFLAGS = "-L${stdenv.lib.getLib json_c}/lib";
+  NIX_LDFLAGS = "-L${json_c}/lib";
 
   dontDisableStatic = true;
   preConfigure = ''
