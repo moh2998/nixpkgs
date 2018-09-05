@@ -692,6 +692,7 @@ in
         serviceConfig.PIDFile = "${mainCfg.stateDir}/httpd.pid";
         serviceConfig.Restart = "always";
         serviceConfig.RestartSec = "5s";
+        serviceConfig.StartLimitInterval = "1min";
       };
 
   };
