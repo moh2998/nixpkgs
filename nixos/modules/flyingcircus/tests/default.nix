@@ -1,7 +1,8 @@
 { pkgs, lib, system, hydraJob }:
 
 {
-  apache = hydraJob (import ./apache.nix { inherit system; });
+  apache = hydraJob (import ./apache/apache.nix { inherit system; });
+  apache_mod_php56 = hydraJob (import ./apache/apache_mod_php56.nix { inherit system; });
 
   clamav = hydraJob (import ./clamav.nix { inherit system; });
 

@@ -45,6 +45,7 @@ in rec {
   # === Imports from newer upstream versions ===
 
   inherit (pkgs_18_03)
+    apacheHttpd
     bazaar
     nodejs-6_x
     nodejs-8_x
@@ -62,7 +63,6 @@ in rec {
     vim;
 
   inherit (pkgs_17_09)
-    apacheHttpd
     audiofile
     buildBowerComponents
     bundlerApp

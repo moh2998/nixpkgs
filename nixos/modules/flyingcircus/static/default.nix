@@ -32,12 +32,8 @@ with lib;
       "3" = "srv";
       # storage (black): VM storage access (Ceph)
       "4" = "sto";
-      # workstation (green): office network
-      "5" = "ws";
       # transfer (blue): primary router uplink
       "6" = "tr";
-      # guest (green): office wifi for unknown users
-      "7" = "gue";
       # storage backend (yellow): Ceph replication and migration
       "8" = "stb";
       # transfer 2 (blue): secondary router-router connection
@@ -52,8 +48,6 @@ with lib;
       "18" = "tr3";
       # dynamic hardware pool: local endpoints for Kamp DHP tunnels
       "19" = "dhp";
-      # office WLAN behind double NAT, see https://wiki.flyingcircus.io/WLAN
-      "99" = "ws2";
     };
 
     flyingcircus.static.nameservers = {
@@ -101,9 +95,9 @@ with lib;
         "2a02:238:f030:102::1043"
         "2a02:238:f030:103::1073"
 
-        # WHQ ws
-        "212.122.41.192/27"
-        "2a02:238:f030:105::/64"
+        # office / saltlabs
+        "213.187.89.33/32"
+        "2a02:238:f04e::/48"
       ];
     };
 
