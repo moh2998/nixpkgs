@@ -10,7 +10,7 @@ let
     if cfg.elasticSearchUrl == null
     then (
           removeSuffix "\n"
-            (fclib.configFromFile /etc/local/kibana/elasticSearchUrl null))
+            (fclib.configFromFile /etc/local/kibana/elasticSearchUrl ""))
     else cfg.elasticSearchUrl;
 
 
@@ -36,7 +36,7 @@ in
   };
 
   config = mkMerge [
-    (mkIf (cfg.enable && elasticSearchUrl != null) {
+    (mkIf (cfg.enable && elasticSearchUrl != "") {
       services.kibana = {
         enable = true;
         listenAddress = lib.head (
