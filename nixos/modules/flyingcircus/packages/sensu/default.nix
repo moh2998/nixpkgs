@@ -1,9 +1,10 @@
 { lib, bundlerEnv, ruby, python2, pkgs, which, defaultGemConfig, zlib, libxml2, graphicsmagick, pkgconfig, imagemagickBig }:
 
-bundlerEnv {
+bundlerEnv rec {
   inherit ruby;
 
-  name = "sensu-0.22.1";
+  name = "sensu-${version}";
+  version = (import ./gemset.nix).sensu.version;
 
   gemfile = ./Gemfile;
   lockfile = ./Gemfile.lock;

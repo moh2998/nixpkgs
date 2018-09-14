@@ -47,6 +47,8 @@ in rec {
   inherit (pkgs_18_03)
     apacheHttpd
     bazaar
+    bundlerApp
+    bundix
     nodejs-6_x
     nodejs-8_x
     nodejs-9_x
@@ -60,12 +62,12 @@ in rec {
     php72
     php72Packages
     pipenv
+    ruby_2_5
     vim;
 
   inherit (pkgs_17_09)
     audiofile
     buildBowerComponents
-    bundlerApp
     elasticsearch2
     elasticsearch5
     fetchbower
@@ -293,7 +295,7 @@ in rec {
   rustUnstable = rustPlatform;
 
   sensu = pkgs.callPackage ./sensu {
-    ruby = pkgs.ruby_2_1;
+    ruby = pkgs.ruby_2_5;
   };
 
   subversion = subversion18;
