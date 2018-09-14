@@ -72,6 +72,7 @@ let
     removeSuffix "\n" (readFile
     (pkgs.runCommand "mkSha2" {
       inherit text;
+      preferLocalBuild = true;
       passAsFile = [ "text" ];
     } "sha256sum < $textPath | cut -f1 -d \" \" > $out"));
 
