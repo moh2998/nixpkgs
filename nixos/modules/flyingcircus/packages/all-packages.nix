@@ -47,6 +47,7 @@ in rec {
   inherit (pkgs_18_03)
     apacheHttpd
     bazaar
+    filebeat6
     nodejs-6_x
     nodejs-8_x
     nodejs-9_x
