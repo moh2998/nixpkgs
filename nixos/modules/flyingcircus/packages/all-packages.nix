@@ -162,7 +162,7 @@ in rec {
   };
   imagemagickBig = pkgs.callPackage ./ImageMagick { };
 
-  influxdb = pkgs.callPackage ./influxdb.nix { };
+  influxdb = pkgs_18_03.callPackage ./influxdb { };
   innotop = pkgs.callPackage ./percona/innotop.nix { };
 
   libevent = pkgs.callPackage ./libevent.nix { };

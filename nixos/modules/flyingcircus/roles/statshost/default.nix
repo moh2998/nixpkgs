@@ -226,13 +226,18 @@ in
       # make the 'influx' command line tool accessible
       environment.systemPackages = [ pkgs.influxdb ];
 
-      services.influxdb011.enable = true;
-      services.influxdb011.dataDir = "/srv/influxdb";
-      services.influxdb011.package = pkgs.influxdb;
-
-      services.influxdb011.extraConfig = {
-        http.enabled = true;
-        http.auth-enabled = false;
+      services.influxdb.enable = true;
+      services.influxdb.dataDir = "/srv/influxdb";
+      systemd.services.influxdb.serviceConfig.LimitNOFILE = "60000";
+      services.influxdb.extraConfig ={
+        data = {
+          index-version = "tsi1";
+        };
+        http = {
+          enabled = true;
+          auth-enabled = false;
+          log-enabled = false;
+        };
 
         graphite = [
           { enabled = true;
