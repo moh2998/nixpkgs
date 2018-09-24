@@ -18,6 +18,14 @@ let
 
   # Please leave the double import in place (the channel build will fail
   # otherwise).
+  pkgs_18_09_src = (import <nixpkgs> {}).fetchFromGitHub {
+    owner = "NixOS";
+    repo = "nixpkgs";
+    rev = "ef9e8bd9335";
+    sha256 = "0a75qvcsrhxjxyvva2mkibczk1m6c91vg0ygxrsmpnna2cyv1bm7";
+  };
+  pkgs_18_09 = import pkgs_18_09_src {};
+
   pkgs_18_03_src = (import <nixpkgs> {}).fetchFromGitHub {
     owner = "NixOS";
     repo = "nixpkgs";
@@ -41,8 +49,13 @@ in rec {
   # Important: register these sources in platform/garbagecollect/default.nix!
   inherit pkgs_17_09_src;
   inherit pkgs_18_03_src;
+  inherit pkgs_18_09_src;
 
   # === Imports from newer upstream versions ===
+
+  inherit (pkgs_18_09)
+    chromium
+    chromedriver;
 
   inherit (pkgs_18_03)
     apacheHttpd
