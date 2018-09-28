@@ -24,6 +24,8 @@ let
       (pkgs.writeText "prometheus.rules" (concatStringsSep "\n" cfg.rules))
     ];
     scrape_configs = cfg.scrapeConfigs;
+    remote_write = cfg.remoteWrite;
+    remote_read = cfg.remoteRead;
   };
 
   # JSON output is also valid YAML
@@ -35,11 +37,11 @@ let
     else generatedPrometheusYml;
 
   cmdlineArgs = cfg.extraFlags ++ [
-    "-storage.local.path=${cfg.dataDir}/metrics"
-    "-config.file=${prometheusYml}"
-    "-web.listen-address=${cfg.listenAddress}"
-    "-alertmanager.notification-queue-capacity=${toString cfg.alertmanagerNotificationQueueCapacity}"
-    "-alertmanager.timeout=${toString cfg.alertmanagerTimeout}s"
+    "--storage.tsdb.path=${cfg.dataDir}/metrics"
+    "--config.file=${prometheusYml}"
+    "--web.listen-address=${cfg.listenAddress}"
+    "--alertmanager.notification-queue-capacity=${toString cfg.alertmanagerNotificationQueueCapacity}"
+    "--alertmanager.timeout=${toString cfg.alertmanagerTimeout}s"
     (optionalString (cfg.alertmanagerURL != []) "-alertmanager.url=${concatStringsSep "," cfg.alertmanagerURL}")
   ];
 
@@ -422,6 +424,15 @@ in {
         '';
       };
 
+      remoteWrite = mkOption {
+        type = types.listOf types.attrs;
+        default = [];
+      };
+      remoteRead = mkOption {
+        type = types.listOf types.attrs;
+        default = [];
+      };
+
       ruleFiles = mkOption {
         type = types.listOf types.path;
         default = [];
@@ -479,7 +490,7 @@ in {
       after    = [ "network.target" ];
       script = ''
         #!/bin/sh
-        exec ${pkgs.prometheus}/bin/prometheus \
+        exec ${pkgs.prometheus_2}/bin/prometheus \
           ${concatStringsSep " \\\n  " cmdlineArgs}
       '';
       serviceConfig = {

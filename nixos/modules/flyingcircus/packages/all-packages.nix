@@ -47,16 +47,17 @@ let
 in rec {
 
   # Important: register these sources in platform/garbagecollect/default.nix!
-  inherit pkgs_17_09_src;
-  inherit pkgs_18_03_src;
   inherit pkgs_18_09_src;
+  inherit pkgs_18_03_src;
+  inherit pkgs_17_09_src;
 
   # === Imports from newer upstream versions ===
 
   inherit (pkgs_18_09)
     chromium
     chromedriver
-    nodejs-10_x;
+    nodejs-10_x
+    prometheus-haproxy-exporter;
 
   inherit (pkgs_18_03)
     apacheHttpd
@@ -95,8 +96,6 @@ in rec {
     mailutils
     nix
     nodejs-4_x
-    prometheus
-    prometheus-haproxy-exporter
     python35
     python35Packages
     python36
@@ -273,6 +272,13 @@ in rec {
   postfix = pkgs.callPackage ./postfix/3.0.nix { };
   powerdns = pkgs.callPackage ./powerdns.nix { };
   prometheus-elasticsearch-exporter = pkgs_17_09.callPackage ./prometheus-elasticsearch-exporter.nix { };
+
+  inherit (pkgs_18_09.callPackage ./prometheus {
+    buildGoPackage = pkgs_18_09.buildGo110Package;
+  })
+    prometheus_1
+    prometheus_2
+    ;
 
   qemu = pkgs.callPackage ./qemu/qemu-2.8.nix {
     inherit (pkgs.darwin.apple_sdk.frameworks) CoreServices Cocoa;
