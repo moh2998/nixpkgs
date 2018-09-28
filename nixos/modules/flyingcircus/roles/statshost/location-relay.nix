@@ -32,7 +32,6 @@ in
         location / {
             resolver ${concatStringsSep " " config.networking.nameservers};
             proxy_pass http://$http_host$request_uri$is_args$args;
-            proxy_bind ${head (fclib.listenAddresses config "ethsrv")};
         }
       }
     '';
