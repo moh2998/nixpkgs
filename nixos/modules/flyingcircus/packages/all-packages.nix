@@ -55,7 +55,8 @@ in rec {
 
   inherit (pkgs_18_09)
     chromium
-    chromedriver;
+    chromedriver
+    nodejs-10_x;
 
   inherit (pkgs_18_03)
     apacheHttpd
@@ -226,6 +227,7 @@ in rec {
   nodejs6 = nodejs-6_x;
   nodejs8 = nodejs-8_x;
   nodejs9 = nodejs-9_x;
+  nodejs10 = nodejs-10_x;
 
   inherit (pkgs.callPackage ./nodejs { libuv = pkgs.libuvVersions.v1_9_1; })
     nodejs7;
