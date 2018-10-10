@@ -6,26 +6,23 @@ let
   fclib = import ../lib;
 
   esVersion =
-    if config.flyingcircus.roles.elasticsearch5.enable
+    if config.flyingcircus.roles.elasticsearch6.enable
+    then "6"
+    else if config.flyingcircus.roles.elasticsearch5.enable
     then "5"
-    else if config.flyingcircus.roles.elasticsearch2.enable
-    then "2"
-    # XXX remove after finishing migration
-    else if config.flyingcircus.roles.elasticsearch.enable
-    then "2"
     else null;
 
   package = versionConfiguration.${esVersion}.package;
   enabled = esVersion != null;
 
   versionConfiguration = {
-    "2" = {
-      package = pkgs.elasticsearch2;
-      serviceName = "elasticsearch2-node";
-    };
     "5" = {
       package = pkgs.elasticsearch5;
       serviceName = "elasticsearch5-node";
+    };
+    "6" = {
+      package = pkgs.elasticsearch6;
+      serviceName = "elasticsearch6-node";
     };
     null = {
       package = null;
@@ -125,6 +122,14 @@ in
         type = types.bool;
         default = false;
         description = "Enable the Flying Circus elasticsearch5 role.";
+      };
+    };
+
+    flyingcircus.roles.elasticsearch6 = {
+      enable = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Enable the Flying Circus elasticsearch6 role.";
       };
     };
 

@@ -38,6 +38,7 @@ import ../../../tests/make-test.nix ({ rolename, ... }:
 
       echo -e '\nSubmitting data'
       curl -s -XPUT 'localhost:9200/customer/external/1' \
+        -H 'Content-Type: application/json' \
         -d'{ "name": "John Doe" }'
 
       echo -e '\nRetrieving data'
