@@ -442,7 +442,6 @@ in
 
       services.influxdb.enable = true;
       services.influxdb.dataDir = "/srv/influxdb";
-      systemd.services.influxdb.serviceConfig.LimitNOFILE = "60000";
       services.influxdb.extraConfig = {
         data = {
           index-version = "tsi1";
@@ -452,6 +451,9 @@ in
           auth-enabled = false;
           log-enabled = false;
         };
+      };
+      systemd.services.influxdb.serviceConfig = {
+        LimitNOFILE = 65535;
       };
       systemd.services.influxdb.postStart =
         let influx = "${config.services.influxdb.package}/bin/influx";

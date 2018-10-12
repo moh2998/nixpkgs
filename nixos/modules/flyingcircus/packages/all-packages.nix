@@ -34,8 +34,6 @@ let
   };
   pkgs_18_03 = import pkgs_18_03_src {};
 
-  # Please leave the double import in place (the channel build will fail
-  # otherwise).
   pkgs_17_09_src = (import <nixpkgs> {}).fetchFromGitHub {
     owner = "NixOS";
     repo = "nixpkgs";

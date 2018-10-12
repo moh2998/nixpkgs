@@ -497,6 +497,7 @@ in {
         User = promUser;
         Restart  = "always";
         WorkingDirectory = cfg.dataDir;
+        LimitNOFILE = 65535;
       };
     };
   };
