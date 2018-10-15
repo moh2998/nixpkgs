@@ -58,6 +58,7 @@ in rec {
     chromedriver
     chromium
     elasticsearch6
+    kibana
     nodejs-10_x
     prometheus-haproxy-exporter
     ;
@@ -94,7 +95,6 @@ in rec {
     graphicsmagick
     iptables
     jbig2dec
-    kibana
     libreoffice-fresh
     mailutils
     nix
