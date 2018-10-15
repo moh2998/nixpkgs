@@ -366,7 +366,8 @@ in
         ];
         remoteWrite = [
           { url = "http://localhost:8086/api/v1/prom/write?db=prometheus";
-            queue_config = { max_backoff = "5s"; }; }
+            queue_config = { capacity = 500000;
+                             max_backoff = "5s"; }; }
         ];
         scrapeConfigs = [
           { job_name = "prometheus";
