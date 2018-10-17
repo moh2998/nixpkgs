@@ -13,6 +13,8 @@ import ../../../tests/make-test.nix ({lib, pkgs, ... }:
         ../infrastructure/fcio/telegraf.nix
       ];
 
+      virtualisation.memorySize = 4096;
+
       flyingcircus.roles.statshost.enable = true;
 
       flyingcircus.enc.parameters.resource_group = "test";

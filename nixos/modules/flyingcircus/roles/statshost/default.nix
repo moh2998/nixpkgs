@@ -15,15 +15,9 @@ let
   cfgProxyRG = config.flyingcircus.roles.statshost-relay;
 
   promFlags = [
-    "-storage.local.retention ${toString (cfgStatsGlobal.prometheusRetention * 24)}h"
-    "-storage.local.series-file-shrink-ratio 0.3"
-    "-storage.local.target-heap-size=${toString prometheusHeap}"
-    "-storage.local.chunk-encoding-version=2"
+    "--storage.tsdb.retention ${toString (cfgStatsGlobal.prometheusRetention)}d"
   ];
   prometheusListenAddress = cfgStatsGlobal.prometheusListenAddress;
-  prometheusHeap =
-    (fclib.current_memory config 256) * 1024 * 1024
-    * cfgStatsGlobal.prometheusHeapMemoryPercentage / 100;
 
   # It's common to have stathost and loghost on the same node. Each should
   # use half of the memory then. A general approach for this kind of
@@ -125,6 +119,8 @@ let
   '';
   grafanaJsonDashboardPath = "${config.services.grafana.dataDir}/dashboards";
 
+  prometheusMigration = builtins.pathExists /var/lib/prometheus;
+
 in
 {
 
@@ -176,16 +172,16 @@ in
         description = "Prometheus listen address";
       };
 
-      prometheusHeapMemoryPercentage = mkOption {
-        type = types.int;
-        default = 66 * heapCorrection / 100;
-        description = "How much RAM should go to prometheus heap.";
-      };
-
       prometheusRetention = mkOption {
         type = types.int;
         default = 70;
         description = "How long to keep data in *days*.";
+      };
+
+      influxdbRetention = mkOption {
+        type = types.str;
+        default = "inf";
+        description = "How long to keep data (influx duration)";
       };
 
       globalAllowedMetrics = mkOption {
@@ -223,22 +219,7 @@ in
     # Global stats host. Currently influxdb *and* prometheus
     (mkIf cfgStatsGlobal.enable {
 
-      # make the 'influx' command line tool accessible
-      environment.systemPackages = [ pkgs.influxdb ];
-
-      services.influxdb.enable = true;
-      services.influxdb.dataDir = "/srv/influxdb";
-      systemd.services.influxdb.serviceConfig.LimitNOFILE = "60000";
-      services.influxdb.extraConfig ={
-        data = {
-          index-version = "tsi1";
-        };
-        http = {
-          enabled = true;
-          auth-enabled = false;
-          log-enabled = false;
-        };
-
+      services.influxdb.extraConfig = {
         graphite = [
           { enabled = true;
             protocol = "udp";
@@ -304,11 +285,6 @@ in
               }];
           })
         relayLocationProxies);
-
-      # Since influx is also running on the machine, split memory between the
-      # two. Once Influx is gone, this seeting allso needs to go.
-      flyingcircus.roles.statshost.prometheusHeapMemoryPercentage = 40;
-
     })
 
     (mkIf (cfgStatsRG.enable || cfgProxyRG.enable) {
@@ -381,54 +357,109 @@ in
         # killed, a crash recovery process is started, which takes even longer.
         TimeoutStopSec = "10m";
       };
-      services.prometheus.enable = true;
-      services.prometheus.extraFlags = promFlags;
-      services.prometheus.listenAddress = prometheusListenAddress;
-      services.prometheus.scrapeConfigs = [
-        { job_name = "prometheus";
-          scrape_interval = "5s";
-          static_configs = [{
-            targets = [ prometheusListenAddress ];
-            labels = {
-              host = config.networking.hostName;
+      services.prometheus = {
+        enable = true;
+        extraFlags = promFlags;
+        listenAddress = prometheusListenAddress;
+        dataDir = "/srv/prometheus";
+        remoteRead =
+          (optional prometheusMigration { url = "http://localhost:9094/api/v1/read"; })
+          ++
+          [ { url = "http://localhost:8086/api/v1/prom/read?db=downsampled"; } ];
+        remoteWrite = [
+          { url = "http://localhost:8086/api/v1/prom/write?db=prometheus";
+            queue_config = { capacity = 500000;
+                             max_backoff = "5s"; }; }
+        ];
+        scrapeConfigs = [
+          { job_name = "prometheus";
+            scrape_interval = "5s";
+            static_configs = [{
+              targets = [ prometheusListenAddress ];
+              labels = {
+                host = config.networking.hostName;
+              };
+            }];
+          }
+          rec {
+            job_name = config.flyingcircus.enc.parameters.resource_group;
+            scrape_interval = "15s";
+            # We use a file sd here. Static config would restart prometheus for
+            # each change. This way prometheus picks up the change automatically
+            # and without restart.
+            file_sd_configs = [{
+              files = [ "/etc/local/statshost/scrape-*.json" ];
+              refresh_interval = "10m";
+            }];
+            metric_relabel_configs =
+              prometheusMetricRelabel ++
+              (relabelConfiguration
+                "/etc/local/statshost/metric-relabel.${job_name}.yaml");
+          }
+          {
+            job_name = "fedrate";
+            scrape_interval = "15s";
+            metrics_path = "/federate";
+            honor_labels = true;
+            params = {
+              "match[]" = [
+                "{job=~\"static|prometheus\"}"
+              ];
             };
-          }];
-        }
-        rec {
-          job_name = config.flyingcircus.enc.parameters.resource_group;
-          scrape_interval = "15s";
-          # We use a file sd here. Static config would restart prometheus for
-          # each change. This way prometheus picks up the change automatically
-          # and without restart.
-          file_sd_configs = [{
-            files = [ "/etc/local/statshost/scrape-*.json" ];
-            refresh_interval = "10m";
-          }];
-          metric_relabel_configs =
-            prometheusMetricRelabel ++
-            (relabelConfiguration
-              "/etc/local/statshost/metric-relabel.${job_name}.yaml");
-        }
-        {
-          job_name = "fedrate";
-          scrape_interval = "15s";
-          metrics_path = "/federate";
-          honor_labels = true;
-          params = {
-            "match[]" = [
-              "{job=~\"static|prometheus\"}"
-            ];
-          };
-          file_sd_configs = [{
-            files = [ "/etc/local/statshost/federate-*.json" ];
-            refresh_interval = "10m";
-          }];
-          metric_relabel_configs = prometheusMetricRelabel;
-        }
+            file_sd_configs = [{
+              files = [ "/etc/local/statshost/federate-*.json" ];
+              refresh_interval = "10m";
+            }];
+            metric_relabel_configs = prometheusMetricRelabel;
+          }
 
-      ]
-      ++ relayRGConfig
-      ++ relayLocationConfig;
+        ]
+        ++ relayRGConfig
+        ++ relayLocationConfig;
+      };
+
+      environment.systemPackages = [ pkgs.influxdb ];
+
+      services.influxdb.enable = true;
+      services.influxdb.dataDir = "/srv/influxdb";
+      services.influxdb.extraConfig = {
+        data = {
+          index-version = "tsi1";
+        };
+        http = {
+          enabled = true;
+          auth-enabled = false;
+          log-enabled = false;
+        };
+      };
+      systemd.services.influxdb.serviceConfig = {
+        LimitNOFILE = 65535;
+      };
+      systemd.services.influxdb.postStart =
+        let influx = "${config.services.influxdb.package}/bin/influx";
+        in ''
+          cat <<__EOF__ | ${influx}
+          CREATE DATABASE prometheus;
+
+          CREATE RETENTION POLICY "default"
+            ON prometheus
+            DURATION 1h REPLICATION 1 DEFAULT;
+
+          CREATE DATABASE downsampled;
+          CREATE RETENTION POLICY "5m"
+            ON downsampled
+            DURATION ${cfgStatsGlobal.influxdbRetention}
+            REPLICATION 1 DEFAULT;
+
+          CREATE CONTINUOUS QUERY PROM_5M
+            ON prometheus BEGIN
+              SELECT last(*) INTO downsampled."5m".:MEASUREMENT
+              FROM /.*/
+              GROUP BY TIME(5m),*
+          END;
+          __EOF__
+        '';
+
 
       system.activationScripts.statshost = {
         text = "install -d -g service -m 2775 /etc/local/statshost";
@@ -444,6 +475,32 @@ in
         };
       };
 
+    })
+
+    (mkIf ((cfgStatsGlobal.enable || cfgStatsRG.enable) && prometheusMigration) {
+
+      # Read old data until expired. ~3 Month
+      systemd.services.prometheus1 = {
+        wantedBy = [ "multi-user.target" ];
+        after    = [ "network.target" ];
+        preStart = ''
+          mkdir -p /run/prometheus1
+          echo "global:" > /run/prometheus1/prometheus.yaml
+        '';
+        script = ''
+          #!/bin/sh
+          exec ${pkgs.prometheus_1}/bin/prometheus \
+            -web.listen-address "localhost:9094" \
+            -config.file /run/prometheus1/prometheus.yaml \
+            -storage.local.path=/var/lib/prometheus/metrics
+        '';
+        serviceConfig = {
+          User = "prometheus";
+          Restart  = "always";
+          WorkingDirectory = "/var/lib/prometheus";
+          PermissionsStartOnly = "true";
+        };
+      };
     })
 
     # Grafana
