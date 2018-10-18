@@ -32,10 +32,10 @@ import ../../../tests/make-test.nix ({ ... }:
     $master->succeed(<<EOF
       for count in {0..300}; do
         curl -s "localhost:5601/api/status" |  grep -q '"state":"green' && exit
-        echo "Checking $count" | logger
+        echo "Checking" | logger
         sleep 1
       done
-      echo "Failed after $count tries" | logger
+      echo "Failed." | logger
       exit 1
     EOF
     );
