@@ -1,6 +1,7 @@
 { pkgs ? (import <nixpkgs> {})
 , lib ? pkgs.lib
 , stdenv ? pkgs.stdenv
+, config ? pkgs.config
 }:
 
 with lib;
@@ -24,7 +25,9 @@ let
     rev = "ef9e8bd9335";
     sha256 = "0a75qvcsrhxjxyvva2mkibczk1m6c91vg0ygxrsmpnna2cyv1bm7";
   };
-  pkgs_18_09 = import pkgs_18_09_src {};
+  pkgs_18_09 = import pkgs_18_09_src {
+    config = { allowUnfree = true; } // config;
+  };
 
   pkgs_18_03_src = (import <nixpkgs> {}).fetchFromGitHub {
     owner = "NixOS";
@@ -52,10 +55,13 @@ in rec {
   # === Imports from newer upstream versions ===
 
   inherit (pkgs_18_09)
-    chromium
     chromedriver
+    chromium
+    elasticsearch6
+    kibana
     nodejs-10_x
-    prometheus-haproxy-exporter;
+    prometheus-haproxy-exporter
+    ;
 
   inherit (pkgs_18_03)
     apacheHttpd
@@ -89,7 +95,6 @@ in rec {
     graphicsmagick
     iptables
     jbig2dec
-    kibana
     libreoffice-fresh
     mailutils
     nix
@@ -145,6 +150,7 @@ in rec {
   docsplit = pkgs.callPackage ./docsplit { };
 
   easyrsa3 = pkgs.callPackage ./easyrsa { };
+
   electron = pkgs.callPackage ./electron.nix {
     gconf = pkgs.gnome.GConf;
   };
