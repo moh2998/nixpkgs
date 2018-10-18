@@ -8,10 +8,8 @@
 
   docsplit = hydraJob (import ./docsplit { inherit system; });
 
-  elasticsearch5 = hydraJob
-    (import ./elasticsearch.nix { rolename = "elasticsearch5"; });
-  elasticsearch6 = hydraJob
-    (import ./elasticsearch.nix { rolename = "elasticsearch6"; });
+  inherit (import ./elasticsearch.nix { inherit system hydraJob; })
+    elasticsearch5 elasticsearch6;
 
   firewall = hydraJob (import ./firewall/atomic.nix { inherit system; });
 

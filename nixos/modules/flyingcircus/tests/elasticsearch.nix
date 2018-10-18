@@ -1,48 +1,61 @@
-import ../../../tests/make-test.nix ({ rolename, ... }:
-{
-  name = rolename;
+{ hydraJob
+, system ? builtins.currentSystem
+}:
 
-  nodes = {
-    master =
-      { pkgs, config, ... }:
-      {
+let
+  factory = rolename: (hydraJob (esTest rolename { inherit system; }));
 
-        imports = [
-          ./setup.nix
-          ../static
-          ../roles
-          ../services
-          ../platform
-        ];
+  esTest = rolename:
+  import ../../../tests/make-test.nix (
+    { ... }:
+    {
+      name = rolename;
 
-        virtualisation.memorySize = 2048;
-        flyingcircus.roles.${rolename}.enable = true;
+      nodes = {
+        master =
+          { pkgs, config, ... }:
+          {
+            imports = [
+              ./setup.nix
+              ../static
+              ../roles
+              ../services
+              ../platform
+            ];
 
+            virtualisation.memorySize = 2048;
+            flyingcircus.roles.${rolename}.enable = true;
+          };
       };
-  };
 
-  testScript = ''
-    startAll;
+      testScript = ''
+        startAll;
 
-    $master->waitForUnit("elasticsearch");
+        $master->waitForUnit("elasticsearch");
 
-    # cluster healthy?
-    $master->succeed('curl -s "localhost:9200/_cat/health?v" | grep green');
+        # cluster healthy?
+        $master->succeed('curl -s "localhost:9200/_cat/health?v" | grep green');
 
-    # simple data round trip
-    $master->succeed(<<'__EOF__');
-      set -e
-      echo -e '\nCreating index'
-      curl -s -XPUT 'localhost:9200/customer'
-      curl -s 'localhost:9200/_cat/indices?v'
+        # simple data round trip
+        $master->succeed(<<'__EOF__');
+        set -e
+        echo -e '\nCreating index'
+        curl -s -XPUT 'localhost:9200/customer'
+        curl -s 'localhost:9200/_cat/indices?v'
 
-      echo -e '\nSubmitting data'
-      curl -s -XPUT 'localhost:9200/customer/external/1' \
-        -H 'Content-Type: application/json' \
-        -d'{ "name": "John Doe" }'
+        echo -e '\nSubmitting data'
+        curl -s -XPUT 'localhost:9200/customer/external/1' \
+          -H 'Content-Type: application/json' \
+          -d'{ "name": "John Doe" }'
 
-      echo -e '\nRetrieving data'
-      curl -s 'localhost:9200/customer/external/1' | grep 'John Doe'
-    __EOF__
-  '';
-})
+        echo -e '\nRetrieving data'
+        curl -s 'localhost:9200/customer/external/1' | grep 'John Doe'
+        __EOF__
+      '';
+    }
+  );
+
+in {
+  "elasticsearch5" = factory "elasticsearch5";
+  "elasticsearch6" = factory "elasticsearch6";
+}
