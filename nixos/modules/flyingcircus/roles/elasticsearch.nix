@@ -68,15 +68,6 @@ in
 
     flyingcircus.roles.elasticsearch = {
 
-      # This option is there for migration. After the release is out, each
-      # node with the elasticsearch role needs to get the elasticsearch2 role
-      # instead. The option can be removed then.
-      enable = mkOption {
-        type = types.bool;
-        default = false;
-        description = "Enable the Flying Circus elasticsearch2 role.";
-      };
-
       clusterName = mkOption {
         type = types.nullOr types.string;
         default = null;
@@ -107,14 +98,6 @@ in
         default = null;
       };
 
-    };
-
-    flyingcircus.roles.elasticsearch2 = {
-      enable = mkOption {
-        type = types.bool;
-        default = false;
-        description = "Enable the Flying Circus elasticsearch2 role.";
-      };
     };
 
     flyingcircus.roles.elasticsearch5 = {
