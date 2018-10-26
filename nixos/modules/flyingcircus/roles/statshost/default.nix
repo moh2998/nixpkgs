@@ -434,29 +434,33 @@ in
       };
       systemd.services.influxdb.serviceConfig = {
         LimitNOFILE = 65535;
+        Restart = "always";
       };
       systemd.services.influxdb.postStart =
         let influx = "${config.services.influxdb.package}/bin/influx";
         in ''
-          cat <<__EOF__ | ${influx}
-          CREATE DATABASE prometheus;
+          echo 'SHOW CONTINUOUS QUERIES' | \
+            ${influx} -format csv | \
+            grep -q PROM_5M || \
+            cat <<__EOF__ | ${influx}
+            CREATE DATABASE prometheus;
 
-          CREATE RETENTION POLICY "default"
-            ON prometheus
-            DURATION 1h REPLICATION 1 DEFAULT;
+            CREATE RETENTION POLICY "default"
+              ON prometheus
+              DURATION 1h REPLICATION 1 DEFAULT;
 
-          CREATE DATABASE downsampled;
-          CREATE RETENTION POLICY "5m"
-            ON downsampled
-            DURATION ${cfgStatsGlobal.influxdbRetention}
-            REPLICATION 1 DEFAULT;
+            CREATE DATABASE downsampled;
+            CREATE RETENTION POLICY "5m"
+              ON downsampled
+              DURATION ${cfgStatsGlobal.influxdbRetention}
+              REPLICATION 1 DEFAULT;
 
-          CREATE CONTINUOUS QUERY PROM_5M
-            ON prometheus BEGIN
-              SELECT last(*) INTO downsampled."5m".:MEASUREMENT
-              FROM /.*/
-              GROUP BY TIME(5m),*
-          END;
+            CREATE CONTINUOUS QUERY PROM_5M
+              ON prometheus BEGIN
+                SELECT last(value) as value INTO downsampled."5m".:MEASUREMENT
+                FROM /.*/
+                GROUP BY TIME(5m),*
+            END;
           __EOF__
         '';
 
@@ -499,6 +503,7 @@ in
           Restart  = "always";
           WorkingDirectory = "/var/lib/prometheus";
           PermissionsStartOnly = "true";
+          LimitNOFILE = 65535;
         };
       };
     })
