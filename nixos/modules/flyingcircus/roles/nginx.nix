@@ -221,11 +221,8 @@ in
 
     system.activationScripts.nginx = ''
       install -d -o ${toString config.ids.uids.nginx} /var/log/nginx
-      install -d -o ${toString config.ids.uids.nginx} -g service -m 02775 /etc/local/nginx
-
-      # Doing this in prestart does not reliably work, because for existing
-      # nginx instances only a *reload* is triggered and no preStart.
-      install -d -o ${toString config.ids.uids.nginx} -g service -m 02775 ${docroot}
+      install -d -o ${toString config.ids.uids.nginx} -g service -m 02775 \
+        /etc/local/nginx ${docroot}
     '';
 
     services.logrotate.config = ''
