@@ -116,9 +116,7 @@ in
       '';
 
       "local/apache/extra-modules.json.example".text = builtins.toJSON
-        [ "proxy_connect"
-          { name = "myModule"; path = "/path/to/my/module.so"; }
-        ];
+        [ "proxy_connect" "rewrite" ];
 
     };
   })
