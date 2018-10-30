@@ -16,6 +16,8 @@ let
 
   serverStatusPort = 9128;
 
+  extraModules = fclib.jsonFromFile "/etc/local/apache/extra-modules.json" "[]";
+
 in
 {
 
@@ -40,7 +42,8 @@ in
     services.httpd.adminAddr = "nobody@example.com";
     services.httpd.multiProcessingModule = "worker";
     services.httpd.port = serverStatusPort;
-    services.httpd.extraModules = [ "deflate" "filter" "proxy_fcgi" ];
+    services.httpd.extraModules =
+      [ "deflate" "filter" "proxy_fcgi" ] ++ extraModules;
 
     services.httpd.extraConfig = ''
       ExtendedStatus on
@@ -82,10 +85,13 @@ in
         Apache httpd is enabled on this machine.
 
         Put your site configuration into this directory as `*.conf`. You may
-        add other files, like SSL keys, as well.
+        add other files, like SSL keys, as well. There is also an
+        `example-configuration` here.
 
-        There is also an `example-configuration` here.
+        To configure loaded apache modules, use the file `extra-modules.json`,
+        see `extra-modules.json.example`. The following modules are currently configured:
 
+          ${concatStringsSep "\n  " config.services.httpd.extraModules}
       '';
 
       "local/apache/example-configuration".text = ''
@@ -108,6 +114,10 @@ in
             </LocationMatch>
         </VirtualHost>
       '';
+
+      "local/apache/extra-modules.json.example".text = builtins.toJSON
+        [ "proxy_connect" "rewrite" ];
+
     };
   })
 
