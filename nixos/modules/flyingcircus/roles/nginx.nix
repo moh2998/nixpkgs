@@ -8,6 +8,8 @@ let
   then "include ${/etc/local/nginx}/*.conf;"
   else "";
 
+  docroot = "/run/nginx/docroot";
+
   baseConfig = ''
     worker_processes ${toString (fclib.current_cores config 1)};
     worker_rlimit_nofile 8192;
@@ -102,7 +104,7 @@ let
       ignore_invalid_headers on;
 
       index index.html;
-      root /var/www/localhost/htdocs;
+      root ${docroot};
 
       client_max_body_size 25m;
 
@@ -219,7 +221,8 @@ in
 
     system.activationScripts.nginx = ''
       install -d -o ${toString config.ids.uids.nginx} /var/log/nginx
-      install -d -o ${toString config.ids.uids.nginx} -g service -m 02775 /etc/local/nginx
+      install -d -o ${toString config.ids.uids.nginx} -g service -m 02775 \
+        /etc/local/nginx ${docroot}
     '';
 
     services.logrotate.config = ''
