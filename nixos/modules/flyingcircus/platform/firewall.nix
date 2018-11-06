@@ -163,7 +163,15 @@ in
         in rg + local;
     };
 
-    security.sudo.extraConfig = "%sensuclient ALL=(root) ${checkIPTables}";
+    security.sudo.extraConfig =
+      let ipt = x: "${pkgs.iptables}/bin/ip${x}tables";
+      in ''
+        Cmnd_Alias IPT_LIST = ${ipt ""} -L*, ${ipt "6"} -L*
+        %users ALL=(root) IPT_LIST
+        %service ALL=(root) IPT_LIST
+
+        %sensuclient ALL=(root) ${checkIPTables}
+      '';
 
     system.activationScripts.local-firewall = {
       text = "install -d -o root -g service -m 02775 ${cfg.firewall.localDir}";
