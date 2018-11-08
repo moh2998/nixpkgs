@@ -198,32 +198,47 @@ let
     ${cfg.extraStopCommands}
   '';
 
-  generateRules = pkgs.writeScript "generate-firewall-rules" ''
-    #! ${pkgs.stdenv.shell} -e
-    export PATH=${pkgs.iproute}/bin:$PATH
-    echo -n "Executing firewall scripts in netns fcio-firewall ... "
-    ip netns del fcio-firewall 2>/dev/null || true
-    ip netns add fcio-firewall
-    ip netns exec fcio-firewall "$@"
-    ip netns exec fcio-firewall iptables-save > ${rulesDir}/iptables-save
-    ip netns exec fcio-firewall ip6tables-save > ${rulesDir}/ip6tables-save
-    ip netns del fcio-firewall
-    echo "done."
-  '';
+  generateRules = with pkgs; writeScript "generate-firewall-rules"
+    ''
+      #!${stdenv.shell} -e
+      export PATH=${makeBinPath [ iproute procps systemd ]}:$PATH
+      echo -n "Executing firewall scripts in netns fcio-firewall ... "
+
+      # Need nscd running for DNS lookups. Starts a temporary instance if
+      # systemd would start it later on.
+      if ! pgrep nscd >/dev/null; then
+        systemctl start nscd
+      fi
+
+      ip netns del fcio-firewall 2>/dev/null || true
+      ip netns add fcio-firewall
+      ip netns exec fcio-firewall "$@"
+      ip netns exec fcio-firewall iptables-save > ${rulesDir}/iptables-save
+      ip netns exec fcio-firewall ip6tables-save > ${rulesDir}/ip6tables-save
+      ip netns del fcio-firewall
+
+      echo "done."
+    '';
 
   # Generally rely on saved rules as we don't expect network connectivity at
   # this point. This is expected to fail if rules are not available.
   atomicStart = writeShScript "firewall-atomic-start" ''
-    echo -n "Loading firewall rules from ${rulesDir} ... "
-    if ! [[ -e ${rulesDir}/iptables-save && -e ${rulesDir}/ip6tables-save ]]
-    then
-      echo "no saved rules found, generating (may fail)"
-      ${atomicReload}
-    else
-      iptables-restore ${rulesDir}/iptables-save
-      ip6tables-restore ${rulesDir}/ip6tables-save
+    # Trying to generate from scratch - this is the safest approach but may fail
+    # if DNS lookups are involved.
+    echo "Activating firewall (may fail) ..."
+    if ! ${atomicReload}; then
+      echo "Trying to load firewall rules from ${rulesDir} ..."
+      if [[ -e ${rulesDir}/iptables-save && -e ${rulesDir}/ip6tables-save ]]
+      then
+        iptables-restore ${rulesDir}/iptables-save
+        ip6tables-restore ${rulesDir}/ip6tables-save
+        rm -f ${confMarker}
+        echo "done."
+      else
+        echo "No saved rules found, aborting"
+        false
+      fi
     fi
-    echo "done."
   '';
 
   # Run the startScript in a separate network namespace. If this succeeds,

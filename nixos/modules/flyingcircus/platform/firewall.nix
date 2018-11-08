@@ -7,51 +7,68 @@ let
 
   fclib = import ../lib;
 
+  # Similar to what we have in modules/services/networking/firewall.nix, but
+  # succeeds if at least one of IPv4 or IPv6 works. This is needed to cover
+  # invocations like `ip4tables -s host.name` where host.name resolves to only
+  # one AF.
+  helpers = ''
+    ip46tables() {
+      if iptables -w "$@"; then
+        # IPv4 was already successful, so success for IPv6 is not demanded
+        ip6tables -w "@$" || true
+      else
+        # IPv6 must succeed in this case
+        ip6tables -w "@$"
+      fi
+    }
+  '';
+
   # Technically, snippets in /etc/local/firewall are plain shell scripts. We
   # don't want to support full (root) shell expressiveness here, so restrict
   # commands to iptables and friends and quote all shell special chars.
-  filterRules = pkgs.writeScript "check-iptables-local-rules.py" ''
-    #! ${pkgs.python3.interpreter}
-    import fileinput
-    import re
-    import shlex
-    import sys
-    import os.path as p
-    R_ALLOWED = re.compile(r'^(#.*|ip[46]{0,2}tables .*)?''$')
+  filterRules =
+    pkgs.writeScript "filter-firewall-local-rules.py" ''
+      #!${pkgs.python3.interpreter}
+      import fileinput
+      import re
+      import shlex
+      import sys
+      import os.path as p
+      R_ALLOWED = re.compile(r'^(#.*|ip(6|46)?tables .*)?''$')
 
-    for line in fileinput.input():
-      atoms = (shlex.quote(s) for s in shlex.split(line.strip(), comments=True))
-      m = R_ALLOWED.match(' '.join(atoms))
-      if m:
-        if m.group(1):
-          print(m.group(1))
-      else:
-        fn = fileinput.filename()
-        print('ERROR: only iptables statements or comments allowed:'
-              '\n{}\n(included from ${cfg.firewall.localDir}/{})'.\
-              format(line.strip(), p.basename(fn)),
-              file=sys.stderr)
-        sys.exit(1)
-  '';
+      for line in fileinput.input():
+        atoms = (shlex.quote(s) for s in shlex.split(line.strip(), comments=True))
+        m = R_ALLOWED.match(' '.join(atoms))
+        if m:
+          if m.group(1):
+            print(m.group(1))
+        else:
+          fn = fileinput.filename()
+          print('ERROR: only iptables statements or comments allowed:'
+                '\n{}\n(included from ${cfg.firewall.localDir}/{})'.\
+                format(line.strip(), p.basename(fn)),
+                file=sys.stderr)
+          sys.exit(1)
+    '';
 
   localRules =
-  let
-    suf = lib.hasSuffix;
-  in lib.optionalString (pathExists cfg.firewall.localDir)
-  (filterSource
-    (p: t: t != "directory" && !(suf "~" p) && !(suf "/README" p))
-    cfg.firewall.localDir);
+    let
+      suf = lib.hasSuffix;
+    in
+    lib.optionalString (pathExists cfg.firewall.localDir)
+      (filterSource
+        (p: t: t != "directory" && !(suf "~" p) && !(suf "/README" p))
+        cfg.firewall.localDir);
 
-  filteredRules = pkgs.runCommand "firewall-local-rules" {
-    inherit localRules;
-  }
-  ''
-    if [[ -d $localRules ]]; then
-      ${filterRules} $localRules/* > $out
-    else
-      touch $out
-    fi
-  '';
+  filteredRules =
+    pkgs.runCommand "firewall-local-rules" { inherit localRules; }
+    ''
+      if [[ -d $localRules ]]; then
+        ${filterRules} $localRules/* > $out
+      else
+        touch $out
+      fi
+    '';
 
   rgAddrs = map (e: e.ip) cfg.enc_addresses.srv;
   rgRules = lib.optionalString
@@ -117,11 +134,9 @@ in
       ip46tables -A nixos-fw -j blackhole
     '';
 
-    security.sudo.extraConfig = "%sensuclient ALL=(root) ${checkIPTables}";
-
     flyingcircus.services.sensu-client.checks = {
       firewall-config = {
-        notification = "Firewall configuration did not exit successfully";
+        notification = "Firewall configuration did not terminate successfully";
         command = ''
           check_file_age -i -c10 -f /var/lib/firewall/configuration-in-progress
         '';
@@ -140,13 +155,23 @@ in
       checkReversePath = false;
 
       extraCommands =
-      let
-        rg = lib.optionalString
-          (rgRules != "")
-          "# Accept traffic within the same resource group.\n${rgRules}\n\n";
-        local = "# Local firewall rules.\n${readFile filteredRules}\n";
-      in rg + local;
+        let
+          rg = lib.optionalString
+            (rgRules != "")
+            "# Accept traffic within the same resource group.\n${rgRules}\n\n";
+          local = "# Local firewall rules.\n${readFile filteredRules}\n";
+        in rg + local;
     };
+
+    security.sudo.extraConfig =
+      let ipt = x: "${pkgs.iptables}/bin/ip${x}tables";
+      in ''
+        Cmnd_Alias IPT_LIST = ${ipt ""} -L*, ${ipt "6"} -L*
+        %users ALL=(root) IPT_LIST
+        %service ALL=(root) IPT_LIST
+
+        %sensuclient ALL=(root) ${checkIPTables}
+      '';
 
     system.activationScripts.local-firewall = {
       text = "install -d -o root -g service -m 02775 ${cfg.firewall.localDir}";
