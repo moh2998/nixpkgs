@@ -7,22 +7,6 @@ let
 
   fclib = import ../lib;
 
-  # Similar to what we have in modules/services/networking/firewall.nix, but
-  # succeeds if at least one of IPv4 or IPv6 works. This is needed to cover
-  # invocations like `ip4tables -s host.name` where host.name resolves to only
-  # one AF.
-  helpers = ''
-    ip46tables() {
-      if iptables -w "$@"; then
-        # IPv4 was already successful, so success for IPv6 is not demanded
-        ip6tables -w "@$" || true
-      else
-        # IPv6 must succeed in this case
-        ip6tables -w "@$"
-      fi
-    }
-  '';
-
   # Technically, snippets in /etc/local/firewall are plain shell scripts. We
   # don't want to support full (root) shell expressiveness here, so restrict
   # commands to iptables and friends and quote all shell special chars.
