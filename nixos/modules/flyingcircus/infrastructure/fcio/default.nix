@@ -50,7 +50,6 @@ in
   boot.kernelModules = [ "i6300esb" ];
   environment.etc."modprobe.d/ubuntu.conf".source = lib.mkForce ./modprobe.conf;
 
-
   boot.blacklistedKernelModules = [ "bochs_drm" ];
   boot.initrd.supportedFilesystems = [ "xfs" ];
   boot.kernelParams = [
@@ -84,6 +83,8 @@ in
   boot.loader.grub.version = 2;
   boot.supportedFilesystems = [ "xfs" ];
   boot.vesa = false;
+
+  boot.kernel.sysctl."vm.swappiness" = mkDefault 20;
 
   networking.hostName = if config.flyingcircus.enc ? name
     then config.flyingcircus.enc.name
