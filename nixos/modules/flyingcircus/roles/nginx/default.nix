@@ -2,7 +2,7 @@
 
 let
   cfg = config.flyingcircus;
-  fclib = import ../lib;
+  fclib = import ../../lib;
 
   localConfig = if pathExists /etc/local/nginx
   then "include ${/etc/local/nginx}/*.conf;"
@@ -222,7 +222,7 @@ in
     system.activationScripts.nginx = ''
       install -d -o ${toString config.ids.uids.nginx} /var/log/nginx
       install -d -o ${toString config.ids.uids.nginx} -g service -m 02775 \
-        /etc/local/nginx ${docroot}
+        /etc/local/nginx /etc/local/nginx/modsecurity ${docroot}
     '';
 
     services.logrotate.config = ''
@@ -318,10 +318,9 @@ in
                 #rewrite (.*) /VirtualHostBase/http/$server_name:$server_port/APP/VirtualHostRoot$1 break;
                 #proxy_pass http://@varnish;
 
-                # enable mod_security - custom mod_security configuration should go into
-                # /etc/nginx/modsecurity/local.conf
-                #ModSecurityEnabled on;
-                #ModSecurityConfig /etc/nginx/modsecurity/modsecurity.conf;
+                # enable mod_security
+                # ModSecurityEnabled on;
+                # ModSecurityConfig /etc/local/nginx/modsecurity/modsecurity_includes.conf;
             }
         }
         '';
@@ -331,15 +330,23 @@ in
         uid = config.ids.uids.nginx;
         mode = "0440";
       };
+      "local/nginx/modsecurity/README.txt".text = ''
+        Here are example configuration files for ModSecurity.
 
-      "nginx/local" = {
-        source = "/etc/local/nginx";
-        enable = cfg.compat.gentoo.enable;
+        You need to adapt them to your needs *and* provide a ruleset. A common
+        ruleset is the OWASP ModSecurity Core Rule Set (CRS) (https://www.modsecurity.org/crs/).
+        You can get it via:
+
+          git clone https://github.com/SpiderLabs/owasp-modsecurity-crs.git
+
+      '';
+      "local/nginx/modsecurity/modsecurity.conf.example" = {
+        source = ./modsecurity.conf;
       };
-      "nginx/fastcgi_params" = {
-        source = "/etc/local/nginx/fastcgi_params";
-        enable = cfg.compat.gentoo.enable;
+      "local/nginx/modsecurity/modsecurity_includes.conf.example" = {
+        source = ./modsecurity_includes.conf;
       };
+
     };
   })
 

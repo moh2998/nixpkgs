@@ -61,6 +61,7 @@ in rec {
     kibana
     mercurial
     mercurialFull
+    nginxModules
     nodejs-10_x
     prometheus-haproxy-exporter
     ;
@@ -221,13 +222,14 @@ in rec {
   nfs-utils = pkgs_17_09.nfs-utils.overrideAttrs (old: {
     postInstall = old.postInstall + "\nln -s bin $out/sbin\n";
   });
-  nginx =
-    let
-      nginxModules = import ./nginx/modules.nix { inherit pkgs; };
-    in
-    pkgs.callPackage ./nginx/stable.nix {
-      modules = [ nginxModules.rtmp nginxModules.dav nginxModules.moreheaders ];
-    };
+  nginx = pkgs_18_09.nginx.override {
+    modules = [
+      nginxModules.dav
+      nginxModules.modsecurity
+      nginxModules.moreheaders
+      nginxModules.rtmp
+    ];
+  };
 
   nodejs4 = nodejs-4_x;
   nodejs6 = nodejs-6_x;
