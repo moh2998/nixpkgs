@@ -94,7 +94,7 @@ in
         after = [ "network.target" "docker.socket" ];
         requires = [ "docker.socket" ];
         serviceConfig = {
-          ExecStart = "${pkgs.docker}/bin/docker daemon --host=fd:// --group=docker --storage-driver=${cfg.storageDriver} ${cfg.extraOptions}";
+          ExecStart = "${pkgs.docker}/bin/dockerd --host=fd:// --group=docker --log-driver=journald --storage-driver=${cfg.storageDriver} ${cfg.extraOptions}";
           #  I'm not sure if that limits aren't too high, but it's what
           #  goes in config bundled with docker itself
           LimitNOFILE = 1048576;
@@ -120,7 +120,7 @@ in
         wantedBy = [ "multi-user.target" ];
         after = [ "network.target" ];
         serviceConfig = {
-          ExecStart = "${pkgs.docker}/bin/docker daemon --group=docker --storage-driver=${cfg.storageDriver} ${cfg.extraOptions}";
+          ExecStart = "${pkgs.docker}/bin/dockerd --group=docker --log-driver=journald --storage-driver=${cfg.storageDriver} ${cfg.extraOptions}";
           #  I'm not sure if that limits aren't too high, but it's what
           #  goes in config bundled with docker itself
           LimitNOFILE = 1048576;
