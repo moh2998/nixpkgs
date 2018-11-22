@@ -7,7 +7,6 @@
      ./clamav.nix
      ./collectdproxy.nix
      ./coturn.nix
-     ./grafana.nix
      ./graylog.nix
      ./kibana.nix
      ./percona.nix

@@ -118,6 +118,7 @@ let
 
   '';
   grafanaJsonDashboardPath = "${config.services.grafana.dataDir}/dashboards";
+  grafanaProvisioningPath = "${config.services.grafana.dataDir}/provisioning";
 
   prometheusMigration = builtins.pathExists /var/lib/prometheus;
 
@@ -464,7 +465,6 @@ in
           __EOF__
         '';
 
-
       system.activationScripts.statshost = {
         text = "install -d -g service -m 2775 /etc/local/statshost";
         deps = [];
@@ -519,10 +519,53 @@ in
           AUTH_LDAP_ENABLED = "true";
           AUTH_LDAP_CONFIG_FILE = toString grafanaLdapConfig;
           LOG_LEVEL = "info";
-          DASHBOARDS_JSON_ENABLED = "true";
-          DASHBOARDS_JSON_PATH = "${grafanaJsonDashboardPath}";
+          PATHS_PROVISIONING = grafanaProvisioningPath;
         };
       };
+
+      systemd.services.grafana.preStart = let
+        fcioDashboards = pkgs.writeTextFile {
+          name = "fcio.yaml";
+          text = ''
+            apiVersion: 1
+
+            providers:
+            - name: 'default'
+              orgId: 1
+              folder: 'FCIO'
+              type: file
+              disableDeletion: false
+              updateIntervalSeconds: 360
+              options:
+                path: ${grafanaJsonDashboardPath}
+          '';
+        };
+        prometheusDatasource = pkgs.writeTextFile {
+          name = "prometheus.yaml";
+          text = ''
+            apiVersion: 1
+
+            # list of datasources that should be deleted from the database
+            deleteDatasources:
+               - name: Prometheus
+                 orgId: 1
+
+            datasources:
+            - name: Prometheus
+              type: prometheus
+              access: proxy
+              orgId: 1
+              url: http://${config.networking.hostName}:9090
+              editable: false
+          '';
+        };
+      in ''
+        rm -rf ${grafanaProvisioningPath}
+        mkdir -p ${grafanaProvisioningPath}/dashboards ${grafanaProvisioningPath}/datasources
+        ln -fs ${fcioDashboards} ${grafanaProvisioningPath}/dashboards/fcio.yaml
+        ln -fs ${prometheusDatasource} ${grafanaProvisioningPath}/datasources/prometheus.yaml
+
+      '';
 
       flyingcircus.roles.nginx.enable = true;
       flyingcircus.roles.nginx.httpConfig =
