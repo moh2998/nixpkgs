@@ -67,6 +67,7 @@ in rec {
     apacheHttpd
     bazaar
     filebeat6
+    grafana
     nodejs-6_x
     nodejs-8_x
     nodejs-9_x
@@ -164,7 +165,6 @@ in rec {
   fclogcheckhelper = pkgs.callPackage ./fclogcheckhelper { };
   fix-so-rpath = pkgs.callPackage ./fix-so-rpath {};
 
-  grafana = pkgs_17_09.callPackage ./grafana { };
   graylog = pkgs.callPackage ./graylog { };
   graylogPlugins = pkgs.recurseIntoAttrs (
       pkgs.callPackage graylog/plugins.nix { }
