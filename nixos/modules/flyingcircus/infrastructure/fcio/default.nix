@@ -84,7 +84,7 @@ in
   boot.supportedFilesystems = [ "xfs" ];
   boot.vesa = false;
 
-  boot.kernel.sysctl."vm.swappiness" = mkDefault 20;
+  boot.kernel.sysctl."vm.swappiness" = mkDefault 10;
 
   networking.hostName = if config.flyingcircus.enc ? name
     then config.flyingcircus.enc.name
