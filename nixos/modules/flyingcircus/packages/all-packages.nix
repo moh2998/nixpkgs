@@ -59,6 +59,8 @@ in rec {
     chromium
     elasticsearch6
     kibana
+    mercurial
+    mercurialFull
     nodejs-10_x
     prometheus-haproxy-exporter
     ;
