@@ -111,6 +111,7 @@ in rec {
     tests = {
       inherit (nixos'.tests)
         firewall
+        docker
         ipv6
         misc
         nat

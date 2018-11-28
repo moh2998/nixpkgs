@@ -24,7 +24,7 @@ let
     };
 
   # Data read from Directory (list) -> users.users structure (list)
-  map_userdata = users:
+  map_userdata = users: serviceUserExtraGroups:
     lib.listToAttrs
       (map
         (user: {
@@ -32,6 +32,7 @@ let
           value = {
             description = user.name;
             group = get_primary_group user;
+            extraGroups = (if user.class == "service" then serviceUserExtraGroups else []);
             hashedPassword = lib.removePrefix "{CRYPT}" user.password;
             home = user.home_directory;
             isNormalUser = true;
@@ -98,6 +99,18 @@ let
 in
 
 {
+
+  options = {
+    flyingcircus.users.serviceUsers.extraGroups = lib.mkOption {
+        type = with lib.types; listOf str;
+        default = [ ];
+        description = ''
+          Names of groups that service users should (additionally)
+          be members of.
+        '';
+      };
+  };
+
   config = {
 
     security.pam.services.sshd.showMotd = true;
@@ -113,7 +126,7 @@ in
 
     users = {
       mutableUsers = false;
-      users = map_userdata cfg.userdata;
+      users = map_userdata cfg.userdata cfg.users.serviceUsers.extraGroups;
       groups = mergeSets [
         admins_group
         { service.gid = config.ids.gids.service; }
