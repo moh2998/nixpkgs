@@ -19,6 +19,7 @@ in
      ./compat.nix
      ./datadog.nix
      ./dovecot.nix
+     ./docker.nix
      ./elasticsearch.nix
      ./external_net
      ./generic.nix

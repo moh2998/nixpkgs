@@ -66,6 +66,7 @@ in rec {
   inherit (pkgs_18_03)
     apacheHttpd
     bazaar
+    docker
     filebeat6
     grafana
     nodejs-6_x
