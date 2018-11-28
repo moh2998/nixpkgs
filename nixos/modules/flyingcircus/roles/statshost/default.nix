@@ -557,6 +557,7 @@ in
               orgId: 1
               url: http://${config.networking.hostName}:9090
               editable: false
+              isDefault: true
           '';
         };
       in ''
