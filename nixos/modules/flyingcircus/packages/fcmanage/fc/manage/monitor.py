@@ -33,7 +33,7 @@ def get_sensucheck_configuration(servicechecks):
         path = '?'.join([p for p in [url.path, url.query] if p])
 
         command = [
-            'check_http',
+            'check_http', '-4',
             '-H', shlex.quote(url.hostname)]
         if url.port:
             command.extend(['-p', str(url.port)])
