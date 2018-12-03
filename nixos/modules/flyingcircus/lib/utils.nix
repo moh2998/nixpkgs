@@ -18,27 +18,25 @@ rec {
 
   coalesce = list: findFirst (el: el != null) null list;
 
-  servicePassword = {
-      pkgs
-      , file
-      , user ? "root"
-      , mode ? "0660"
+  servicePassword =
+    { pkgs        # XXX Is there a way to get pkgs here w/o passing?
+    , file
+    , user ? "root"
+    , mode ? "0660"
+    , token ? ""  # personalize derivation to prevent Nix hash collisions
     }:
-    # XXX Is there a way to get pkgs here w/o passing?
     let
-      warn = w: x: builtins.trace "[1;31mwarning: ${w}[0m" x;
-
-      identifier = builtins.replaceStrings ["/"] ["-"] file;
-
+      name = builtins.replaceStrings ["/"] ["-"] file;
       generatePasswordCommand = "${pkgs.apg}/bin/apg -a 1 -M lnc -n 1 -m 32 -d";
       generatedPassword =
-        warn "Password ${file} will be stored as plaintext in the Nix store!"
         readFile
-          (pkgs.runCommand identifier { preferLocalBuild = true; }
+          (pkgs.runCommand name { preferLocalBuild = true; }
             "${generatePasswordCommand} > $out");
 
+      # Only install directory if not there, otherwise, permissions might
+      # change.
       generatorShellScript = how: ''
-        # Only install if not there, otherwise, permissions might change.
+        # ${token}
         test -d $(dirname ${file}) || install -d $(dirname ${file})
         if [[ ! -e ${file} ]]; then
           ( umask 007;
