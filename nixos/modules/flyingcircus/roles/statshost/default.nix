@@ -465,6 +465,13 @@ in
           __EOF__
         '';
 
+      services.telegraf.inputs = {
+        influxdb = [{
+          urls = [ "http://localhost:8086/debug/vars" ];
+        }];
+      };
+      flyingcircus.roles.statshost.globalAllowedMetrics = [ "influxdb" ];
+
       system.activationScripts.statshost = {
         text = "install -d -g service -m 2775 /etc/local/statshost";
         deps = [];
