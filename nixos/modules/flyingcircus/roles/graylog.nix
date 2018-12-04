@@ -1,8 +1,8 @@
 # NOTES:
 # * Mongo cluster setup requires manual intervention.
 
-
 { config, lib, pkgs, ... }:
+
 with lib;
 let
   cfg = config.flyingcircus.roles.graylog;
@@ -11,16 +11,16 @@ let
   listenOn = "${config.networking.hostName}.${config.networking.domain}";
   serviceUser = "graylog";
 
-
+  # -- files --
   # XXX it helps a lot if the admin password is the same on all nodes. Hence
   # we should generate it somehow. But how?!
-  # -- files --
   rootPasswordFile = "/etc/local/graylog/password";
   passwordSecretFile = "/etc/local/graylog/password_secret";
 
   rootPassword = fclib.servicePassword {
     inherit pkgs;
     file = rootPasswordFile;
+    token = config.networking.hostName;
   };
   rootPasswordSha2 = mkSha2 rootPassword.value;
 
