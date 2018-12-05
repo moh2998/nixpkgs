@@ -2,7 +2,7 @@
 
 let
   cfg = config.flyingcircus;
-  fclib = import ../lib;
+  fclib = import ../../lib;
 
   localConfig = if pathExists /etc/local/nginx
   then "include ${/etc/local/nginx}/*.conf;"
@@ -204,9 +204,7 @@ in
             "listen ${formatted_addr}:443 ssl;"])
           (map
             (addr:
-              if fclib.isIp4 addr
-              then addr
-              else "[${addr}]")
+              if fclib.isIp4 addr then addr else "[${addr}]")
             (fclib.listenAddresses config "ethfe")));
 
   in mkMerge [
@@ -222,7 +220,7 @@ in
     system.activationScripts.nginx = ''
       install -d -o ${toString config.ids.uids.nginx} /var/log/nginx
       install -d -o ${toString config.ids.uids.nginx} -g service -m 02775 \
-        /etc/local/nginx ${docroot}
+        /etc/local/nginx /etc/local/nginx/modsecurity ${docroot}
     '';
 
     services.logrotate.config = ''
@@ -244,7 +242,6 @@ in
       }];
     };
 
-
     environment.etc = {
 
       "local/nginx/README.txt".text = ''
@@ -260,7 +257,6 @@ in
           auth_basic_user_file "/etc/local/nginx/htpasswd_fcio_users";
 
         There is also an `example-configuration` here.
-
       '';
 
       "local/nginx/fastcgi_params" = {
@@ -271,60 +267,8 @@ in
         source = "${pkgs.nginx}/conf/uwsgi_params";
       };
 
-      "local/nginx/example-configuration".text = ''
-        # Example nginx configuration for the Flying Circus. Copy this file into
-        # 'mydomain.conf' and edit. You'll certainly want to replace www.example.com
-        # with something more specific. Please note that configuration files must end
-        # with '.conf' to be active. Reload with `sudo fc-manage --build`.
-
-        upstream @varnish {
-            server localhost:8008;
-            keepalive 100;
-        }
-
-        upstream @haproxy {
-            server localhost:8002;
-            keepalive 10;
-        }
-
-        upstream @app {
-            server localhost:8080;
-        }
-
-        server {
-            ${listenStatements}
-
-            # The first server name listed is the primary name. We remommend against
-            # using a wildcard server name (*.example.com) as primary.
-            server_name www.example.com example.com;
-
-            # Redirect to primary server name (makes URLs unique).
-            if ($host != $server_name) {
-                rewrite . $scheme://$server_name$request_uri redirect;
-            }
-
-            # Enable SSL. SSL parameters like cipher suite have sensible defaults.
-            #ssl_certificate /etc/nginx/local/www.example.com.crt;
-            #ssl_certificate_key /etc/nginx/local/www.example.com.key;
-
-            # Enable the following block if you want to serve HTTPS-only.
-            #if ($server_port != 443) {
-            #    rewrite . https://$server_name$request_uri redirect;
-            #}
-            #add_header Strict-Transport-Security max-age=31536000;
-
-            location / {
-                # Example for passing virtual hosting details to Zope apps
-                #rewrite (.*) /VirtualHostBase/http/$server_name:$server_port/APP/VirtualHostRoot$1 break;
-                #proxy_pass http://@varnish;
-
-                # enable mod_security - custom mod_security configuration should go into
-                # /etc/nginx/modsecurity/local.conf
-                #ModSecurityEnabled on;
-                #ModSecurityConfig /etc/nginx/modsecurity/modsecurity.conf;
-            }
-        }
-        '';
+      "local/nginx/example-configuration".text =
+        import ./example-config.nix { inherit listenStatements; };
 
       "local/nginx/htpasswd_fcio_users" = {
         text = htpasswdUsers;
@@ -332,14 +276,31 @@ in
         mode = "0440";
       };
 
-      "nginx/local" = {
-        source = "/etc/local/nginx";
-        enable = cfg.compat.gentoo.enable;
+      "local/nginx/modsecurity/README.txt".text = ''
+        Here are example configuration files for ModSecurity.
+
+        You need to adapt them to your needs *and* provide a ruleset. A common
+        ruleset is the OWASP ModSecurity Core Rule Set (CRS) (https://www.modsecurity.org/crs/).
+        You can get it via:
+
+          git clone https://github.com/SpiderLabs/owasp-modsecurity-crs.git
+
+        Save the adapted ruleset in a subdirectory here and adjust
+        modsecurity_includes.conf.
+      '';
+
+      "local/nginx/modsecurity/modsecurity.conf.example" = {
+        source = ./modsecurity.conf;
       };
-      "nginx/fastcgi_params" = {
-        source = "/etc/local/nginx/fastcgi_params";
-        enable = cfg.compat.gentoo.enable;
+
+      "local/nginx/modsecurity/modsecurity_includes.conf.example" = {
+        source = ./modsecurity_includes.conf;
       };
+
+      "local/nginx/modsecurity/unicode.mapping" = {
+        source = "${pkgs.modsecurity_standalone.nginx}/unicode.mapping";
+      };
+
     };
   })
 

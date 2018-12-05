@@ -33,7 +33,7 @@ git merge -m "$msg" $stag
 
 git checkout $dev
 msg="Backmerge branch '$prod' into $dev for release $releaseid"
-git merge --no-ff -m "$msg" $prod
+git merge -m "$msg" $prod
 
 echo "$0: committed changes:"
 PAGER= git log --graph --decorate --format=short -n3
