@@ -34,7 +34,7 @@ in
      ./mongodb
      ./mysql.nix
      ./nfs.nix
-     ./nginx.nix
+     ./nginx
      ./postgresql.nix
      ./powerdns.nix
      ./rabbitmq.nix
