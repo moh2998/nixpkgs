@@ -204,9 +204,7 @@ in
             "listen ${formatted_addr}:443 ssl;"])
           (map
             (addr:
-              if fclib.isIp4 addr
-              then addr
-              else "[${addr}]")
+              if fclib.isIp4 addr then addr else "[${addr}]")
             (fclib.listenAddresses config "ethfe")));
 
   in mkMerge [
