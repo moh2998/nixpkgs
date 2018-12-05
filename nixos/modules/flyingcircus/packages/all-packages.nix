@@ -61,6 +61,7 @@ in rec {
     kibana
     mercurial
     mercurialFull
+    modsecurity_standalone
     nginxModules
     nodejs-10_x
     prometheus-haproxy-exporter
