@@ -79,6 +79,7 @@ in mkMerge [
     systemd.services.telegraf = {
       serviceConfig = {
         PermissionsStartOnly = "true";
+        Nice = -10;
       };
       preStart = ''
         ${pkgs.coreutils}/bin/install -d -o root -g service -m 02775 \
