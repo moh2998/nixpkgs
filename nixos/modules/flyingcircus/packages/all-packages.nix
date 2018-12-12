@@ -22,8 +22,8 @@ let
   pkgs_18_09_src = (import <nixpkgs> {}).fetchFromGitHub {
     owner = "NixOS";
     repo = "nixpkgs";
-    rev = "ef9e8bd9335";
-    sha256 = "0a75qvcsrhxjxyvva2mkibczk1m6c91vg0ygxrsmpnna2cyv1bm7";
+    rev = "4f3446f";
+    sha256 = "0dqjkhhhckp881mns69qxn4dngcykal1gqrpaf9qy2vja4i41ay5";
   };
   pkgs_18_09 = import pkgs_18_09_src {
     config = { allowUnfree = true; } // config;
@@ -32,25 +32,16 @@ let
   pkgs_18_03_src = (import <nixpkgs> {}).fetchFromGitHub {
     owner = "NixOS";
     repo = "nixpkgs";
-    rev = "b6646cb";
-    sha256 = "1wm3jdkx06i9yr2hgmxap8rxhp54q2f5ds83k6iig9xjmyf4pl0a";
+    rev = "b551f89";
+    sha256 = "0p9f7mpd5cpy4mf8j2dq78mqbvwfcdzmhp95hn3lklmrpf8wam2j";
   };
   pkgs_18_03 = import pkgs_18_03_src {};
-
-  pkgs_17_09_src = (import <nixpkgs> {}).fetchFromGitHub {
-    owner = "NixOS";
-    repo = "nixpkgs";
-    rev = "0d856d8";
-    sha256 = "0pqsk61kkzqqb79jp5rhn7ay5ld7h02hd8nas23qn6ibp1mv7aa1";
-  };
-  pkgs_17_09 = import pkgs_17_09_src {};
 
 in rec {
 
   # Important: register these sources in platform/garbagecollect/default.nix!
   inherit pkgs_18_09_src;
   inherit pkgs_18_03_src;
-  inherit pkgs_17_09_src;
 
   # === Imports from newer upstream versions ===
 
@@ -63,16 +54,32 @@ in rec {
     mercurialFull
     modsecurity_standalone
     nginxModules
+    nix
     nodejs-10_x
     prometheus-haproxy-exporter
     ;
 
   inherit (pkgs_18_03)
     apacheHttpd
+    audiofile
     bazaar
+    buildBowerComponents  # XXX doesn't build in isolation
+    bundlerApp            # XXX doesn't build in isolation
     docker
+    elasticsearch2
+    elasticsearch5
+    fetchbower            # XXX doesn't build in isolation
     filebeat6
+    firefox
+    ghostscript
+    git
     grafana
+    graphicsmagick
+    iptables
+    jbig2dec
+    libreoffice-fresh
+    mailutils
+    nodejs-4_x            # XXX deleted
     nodejs-6_x
     nodejs-8_x
     nodejs-9_x
@@ -86,25 +93,6 @@ in rec {
     php72
     php72Packages
     pipenv
-    vim;
-
-  inherit (pkgs_17_09)
-    audiofile
-    buildBowerComponents
-    bundlerApp
-    elasticsearch2
-    elasticsearch5
-    fetchbower
-    firefox
-    ghostscript
-    git
-    graphicsmagick
-    iptables
-    jbig2dec
-    libreoffice-fresh
-    mailutils
-    nix
-    nodejs-4_x
     python35
     python35Packages
     python36
@@ -115,14 +103,16 @@ in rec {
     samba
     strongswan
     subversion18
+    vim
     virtualbox
     wkhtmltopdf
-    xulrunner;
+    xulrunner
+    ;
 
-  libtiff = mergeOutputs [ "out" "bin" "dev" ] pkgs_17_09.libtiff;
-  libsndfile = mergeOutputs [ "out" "bin" "dev" ] pkgs_17_09.libsndfile;
-  libvorbis = mergeOutputs [ "out" "dev" ] pkgs_17_09.libvorbis;
-  libjpeg-turbo = mergeOutputs [ "out" "bin" "dev" ] pkgs_17_09.libjpeg;
+  libtiff = mergeOutputs [ "out" "bin" "dev" ] pkgs_18_03.libtiff;
+  libsndfile = mergeOutputs [ "out" "bin" "dev" ] pkgs_18_03.libsndfile;
+  libvorbis = mergeOutputs [ "out" "dev" ] pkgs_18_03.libvorbis;
+  libjpeg-turbo = mergeOutputs [ "out" "bin" "dev" ] pkgs_18_03.libjpeg;
   libjpeg = libjpeg-turbo;
 
   # === Own ports ===
@@ -220,7 +210,7 @@ in rec {
   multiping = pkgs.callPackage ./multiping { };
 
   nagiosPluginsOfficial = pkgs.callPackage ./nagios-plugins-official-2.x.nix {};
-  nfs-utils = pkgs_17_09.nfs-utils.overrideAttrs (old: {
+  nfs-utils = pkgs_18_03.nfs-utils.overrideAttrs (old: {
     postInstall = old.postInstall + "\nln -s bin $out/sbin\n";
   });
   nginx = pkgs_18_09.nginx.override {
@@ -281,7 +271,7 @@ in rec {
 
   postfix = pkgs.callPackage ./postfix/3.0.nix { };
   powerdns = pkgs.callPackage ./powerdns.nix { };
-  prometheus-elasticsearch-exporter = pkgs_17_09.callPackage ./prometheus-elasticsearch-exporter.nix { };
+  prometheus-elasticsearch-exporter = pkgs_18_03.callPackage ./prometheus-elasticsearch-exporter.nix { };
 
   inherit (pkgs_18_09.callPackage ./prometheus {
     buildGoPackage = pkgs_18_09.buildGo110Package;
@@ -331,7 +321,7 @@ in rec {
   subversion = subversion18;
 
   telegraf = pkgs.callPackage ./telegraf {
-    inherit (pkgs_17_09) buildGoPackage fetchFromGitHub;
+    inherit (pkgs_18_03) buildGoPackage fetchFromGitHub;
   };
 
   uchiwa = pkgs.callPackage ./uchiwa { };
@@ -343,7 +333,7 @@ in rec {
     });
   # The guest additions need to use the kernel we're actually building so we
   # have to callPackage them instead of using the pre-made package.
-  virtualboxGuestAdditions = pkgs_17_09.callPackage "${pkgs_17_09_src}/pkgs/applications/virtualization/virtualbox/guest-additions" { kernel = linux_4_4; };
+  virtualboxGuestAdditions = pkgs_18_03.callPackage "${pkgs_18_03_src}/pkgs/applications/virtualization/virtualbox/guest-additions" { kernel = linux_4_4; };
   vulnix = pkgs.callPackage ./vulnix { };
 
   xtrabackup = pkgs.callPackage ./percona/xtrabackup.nix { };
