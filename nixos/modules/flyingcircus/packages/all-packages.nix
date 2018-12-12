@@ -79,7 +79,6 @@ in rec {
     jbig2dec
     libreoffice-fresh
     mailutils
-    nodejs-4_x            # XXX deleted
     nodejs-6_x
     nodejs-8_x
     nodejs-9_x
@@ -222,7 +221,6 @@ in rec {
     ];
   };
 
-  nodejs4 = nodejs-4_x;
   nodejs6 = nodejs-6_x;
   nodejs8 = nodejs-8_x;
   nodejs9 = nodejs-9_x;
