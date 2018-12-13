@@ -58,7 +58,7 @@ in
         Run `sudo fc-manage --build` to activate the configuraiton.
       '';
 
-      system.activationScripts.dovecot = ''
+      system.activationScripts.kibana = ''
         install -d -g service -m 0775 /etc/local/kibana
       '';
     })

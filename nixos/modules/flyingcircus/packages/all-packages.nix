@@ -22,8 +22,8 @@ let
   pkgs_18_09_src = (import <nixpkgs> {}).fetchFromGitHub {
     owner = "NixOS";
     repo = "nixpkgs";
-    rev = "4f3446f";
-    sha256 = "0dqjkhhhckp881mns69qxn4dngcykal1gqrpaf9qy2vja4i41ay5";
+    rev = "3b44ccd99";
+    sha256 = "17704307xdkxkgharwnlxg46fzchrfz28niprz4z3cjd50shf6hh";
   };
   pkgs_18_09 = import pkgs_18_09_src {
     config = { allowUnfree = true; } // config;
@@ -54,7 +54,6 @@ in rec {
     mercurialFull
     modsecurity_standalone
     nginxModules
-    nix
     nodejs-10_x
     prometheus-haproxy-exporter
     ;
@@ -79,6 +78,7 @@ in rec {
     jbig2dec
     libreoffice-fresh
     mailutils
+    nix
     nodejs-6_x
     nodejs-8_x
     nodejs-9_x
