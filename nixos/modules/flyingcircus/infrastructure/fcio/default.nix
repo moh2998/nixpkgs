@@ -35,6 +35,9 @@ in
   # Would need qemu to help here and notice that this is the same device as
   # the root.
   nix.readOnlyStore = false;
+  nix.extraOptions = ''
+    http-connections = 2
+  '';
 
   system.activationScripts.readOnlyStore =
     if config.nix.readOnlyStore then ''
