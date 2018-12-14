@@ -223,6 +223,9 @@ in
           lib.readFile ../files/etc_nixos_configuration.nix;
       };
 
+    # obsolete in Nix 2.0
+    nix.requireSignedBinaryCaches = false;
+
     services.openssh = {
       enable = true;
       challengeResponseAuthentication = false;
