@@ -184,6 +184,7 @@ in
       es_circuit_breakers = {
         notification = "ES: Circuit Breakers active";
         command = "check-es-circuit-breakers.rb -h ${thisNode}";
+        interval = 300;
       };
 
       es_cluster_health = {
@@ -194,11 +195,13 @@ in
       es_file_descriptor = {
         notification = "ES: File descriptors in use";
         command = "check-es-file-descriptors.rb -h ${thisNode}";
+        interval = 300;
       };
 
       es_heap = {
         notification = "ES: Heap too full";
         command = "check-es-heap.rb -h ${thisNode} -w 80 -c 90 -P";
+        interval = 300;
       };
 
       es_node_status = {
@@ -209,6 +212,7 @@ in
       es_shard_allocation_status = {
         notification = "ES: Shard allocation status";
         command = "check-es-shard-allocation-status.rb -s ${thisNode}";
+        interval = 300;
       };
 
     };
