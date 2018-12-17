@@ -27,10 +27,8 @@ rec {
     }:
     let
       name = builtins.replaceStrings ["/"] ["-"] file;
-      generatePasswordCommand = ''
-        # Password for ${token}
-        ${pkgs.apg}/bin/apg -a 1 -M lnc -n 1 -m 32 -d
-      '';
+      generatePasswordCommand =
+        "${pkgs.apg}/bin/apg -a 1 -M lnc -n 1 -m 32 -d -c \"${token}\"";
       generatedPassword =
         readFile (
           pkgs.runCommand name { preferLocalBuild = true; }
