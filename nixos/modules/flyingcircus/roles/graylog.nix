@@ -27,6 +27,7 @@ let
   passwordSecret = fclib.servicePassword {
     inherit pkgs;
     file = passwordSecretFile;
+    token = config.networking.hostName;
   };
 
   glAPIPort = 9001;
