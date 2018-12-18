@@ -25,10 +25,12 @@ let
     inherit pkgs;
     file = "/etc/local/ldap/password.reader";
     mode = "0640";  # Only set once via bootstrapLdiff
+    token = config.networking.hostName;
   };
   managerPassword = fclib.servicePassword {
     inherit pkgs;
     file = "/etc/local/ldap/password.manager";
+    token = config.networking.hostName;
   };
 
   bootstrapLdiff = pkgs.writeText "bootstrap.ldiff" ''
@@ -169,8 +171,6 @@ in
         description = "Suffix override (mainly for testing).";
       };
     };
-
-
   };
 
   config = mkMerge [
@@ -251,9 +251,9 @@ in
 
       system.activationScripts.fcio-ldap-init =
         stringAfter [ "users" "groups" ] ''
-          set -e
-          install -d -o root -g service -m 02775 \
-            /etc/local/ldap
+          install -d /etc/local/ldap
+          chown openldap:service /etc/local/ldap
+          chmod 2775 /etc/local/ldap
           test -e ${listenUrlsPath} || (
             cat <<__EOF__ >${listenUrlsPath}
           # LDAP listen urls, one per line
