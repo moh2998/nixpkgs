@@ -78,7 +78,6 @@ in {
         # from garbage collection.
         ${pkgs.pkgs_18_09_src}
         ${pkgs.pkgs_18_03_src}
-        ${pkgs.pkgs_17_09_src}
       '';
     }
 

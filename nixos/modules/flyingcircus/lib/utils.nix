@@ -27,17 +27,17 @@ rec {
     }:
     let
       name = builtins.replaceStrings ["/"] ["-"] file;
-      generatePasswordCommand = "${pkgs.apg}/bin/apg -a 1 -M lnc -n 1 -m 32 -d";
+      generatePasswordCommand =
+        "${pkgs.apg}/bin/apg -a 1 -M lnc -n 1 -m 32 -d -c \"${token}\"";
       generatedPassword =
-        readFile
-          (pkgs.runCommand name { preferLocalBuild = true; }
-            "${generatePasswordCommand} > $out");
+        readFile (
+          pkgs.runCommand name { preferLocalBuild = true; }
+          "${generatePasswordCommand} > $out");
 
       # Only install directory if not there, otherwise, permissions might
       # change.
       generatorShellScript = how: ''
-        # ${token}
-        test -d $(dirname ${file}) || install -d $(dirname ${file})
+        install -d $(dirname ${file})
         if [[ ! -e ${file} ]]; then
           ( umask 007;
             ${how} > ${file}

@@ -26,7 +26,7 @@ let
       default_type application/octet-stream;
       charset UTF-8;
 
-      map_hash_bucket_size 64;
+      map_hash_bucket_size ${toString cfg.roles.nginx.mapHashBucketSize};
 
       map $remote_addr $remote_addr_anon_head {
         default 0.0.0;
@@ -176,6 +176,12 @@ in
         type = types.lines;
         default = "";
         description = "Configuration lines to be appended inside of the http {} block.";
+      };
+
+      mapHashBucketSize = mkOption {
+        type = types.int;
+        default = 64;
+        description = "Bucket size for the 'map' variables hash tables.";
       };
 
     };

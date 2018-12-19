@@ -12,7 +12,7 @@ let
       name = rolename;
 
       nodes = {
-        master =
+        es =
           { pkgs, config, ... }:
           {
             imports = [
@@ -23,7 +23,8 @@ let
               ../platform
             ];
 
-            virtualisation.memorySize = 2048;
+            virtualisation.memorySize = 3072;
+            virtualisation.qemu.options = [ "-smp 2" ];
             flyingcircus.roles.${rolename}.enable = true;
           };
       };
@@ -31,24 +32,24 @@ let
       testScript = ''
         startAll;
 
-        $master->waitForUnit("elasticsearch");
+        $es->waitForUnit("elasticsearch");
 
         # cluster healthy?
-        $master->succeed('curl -s "localhost:9200/_cat/health?v" | grep green');
+        $es->succeed('curl -s "localhost:9200/_cat/health?v" | grep green');
 
         # simple data round trip
-        $master->succeed(<<'__EOF__');
+        $es->succeed(<<'__EOF__');
         set -e
-        echo -e '\nCreating index'
+        echo -e '\n${rolename}: Creating index'
         curl -s -XPUT 'localhost:9200/customer'
         curl -s 'localhost:9200/_cat/indices?v'
 
-        echo -e '\nSubmitting data'
+        echo -e '\n${rolename}: Submitting data'
         curl -s -XPUT 'localhost:9200/customer/external/1' \
           -H 'Content-Type: application/json' \
           -d'{ "name": "John Doe" }'
 
-        echo -e '\nRetrieving data'
+        echo -e '\n${rolename}: Retrieving data'
         curl -s 'localhost:9200/customer/external/1' | grep 'John Doe'
         __EOF__
       '';
