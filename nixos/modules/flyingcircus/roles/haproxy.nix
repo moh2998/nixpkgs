@@ -4,8 +4,14 @@ let
   cfg = config.flyingcircus.roles.haproxy;
   fclib = import ../lib;
 
-  haproxyCfgContent = fclib.configFromFile /etc/local/haproxy/haproxy.cfg cfg.haConfig;
   haproxyCfg = pkgs.writeText "haproxy.conf" config.services.haproxy.config;
+
+  configFiles =
+    builtins.filter
+      (p: hasSuffix ".cfg" p)
+      (fclib.files /etc/local/haproxy);
+
+  haproxyCfgContent = builtins.concatStringsSep "\n" (map builtins.readFile configFiles);
 
   example = ''
     # haproxy configuration example - copy to haproxy.cfg and adapt.
@@ -71,7 +77,8 @@ in
     (mkIf config.flyingcircus.roles.haproxy.enable {
 
     services.haproxy.enable = true;
-    services.haproxy.config = haproxyCfgContent;
+    services.haproxy.config =
+      if configFiles == [] then example else haproxyCfgContent;
 
    # FCIO
     systemd.services.haproxy = let
@@ -106,8 +113,12 @@ in
       "local/haproxy/README.txt".text = ''
         HAProxy is enabled on this machine.
 
-        Put your haproxy configuration here as `haproxy.cfg`. There is also
-        an example configuration here.
+        Put your main haproxy configuration here as e.g. `haproxy.cfg`.
+        There is also an example configuration here.
+
+        If you need more than just one centralized configuration file,
+        add more files named `*.cfg` here. They will get merged along
+        in alphabetical order and used as `haproxy.cfg`.
       '';
       "local/haproxy/haproxy.cfg.example".text = example;
 

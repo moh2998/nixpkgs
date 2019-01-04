@@ -144,6 +144,7 @@ in
     systemd.services.elasticsearch = {
       serviceConfig = {
         LimitMEMLOCK = "infinity";
+        Restart = "always";
       };
       preStart = mkAfter ''
         # Install scripts
