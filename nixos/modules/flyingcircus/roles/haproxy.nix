@@ -77,7 +77,8 @@ in
     (mkIf config.flyingcircus.roles.haproxy.enable {
 
     services.haproxy.enable = true;
-    services.haproxy.config = haproxyCfgContent;
+    services.haproxy.config =
+      if configFiles == [] then example else haproxyCfgContent;
 
    # FCIO
     systemd.services.haproxy = let
