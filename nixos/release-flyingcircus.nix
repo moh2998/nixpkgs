@@ -91,7 +91,7 @@ let
   # List of package names for Python packages defined in modules/flyingcircus
   ownPythonPackages = builtins.attrNames
     (import modules/flyingcircus/packages/python-packages.nix {
-      inherit pkgs stdenv;
+      inherit pkgs;
       python = null; self = null; buildPythonPackage = a: {};
     });
 
