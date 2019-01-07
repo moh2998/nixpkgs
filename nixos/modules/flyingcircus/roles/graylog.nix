@@ -518,7 +518,7 @@ in
       # Since haproxy is rather lightweight we just fire up one on each graylog
       # node, talking to all known graylog nodes.
       flyingcircus.roles.haproxy.enable = true;
-      flyingcircus.roles.haproxy.haConfig = let
+      services.haproxy.config = mkForce (let
         backendConfig = node_config: concatStringsSep "\n"
           (map
             (node: "    " + (node_config node))
@@ -582,7 +582,7 @@ in
         backend stats
             stats uri /
             stats refresh 5s
-      '';
+      '');
 
       })
 

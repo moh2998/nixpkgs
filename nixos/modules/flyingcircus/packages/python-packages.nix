@@ -4,7 +4,7 @@
 # attributes if necessary.
 # Python _applications_ which should get built only against a specific Python
 # version are better off in all-packages.nix.
-{ pkgs, stdenv, python, self, buildPythonPackage }:
+{ pkgs, python, self, buildPythonPackage }:
 
 let
   lib = pkgs.lib;
@@ -17,7 +17,7 @@ in rec {
       sha256 = "cc6a19da8ebff6e7074f731447ef7e112bd23adf3de5c597cf9989f2fd8defe9";
     };
     doCheck = false;
-    meta = with pkgs.stdenv.lib; {
+    meta = with lib; {
       homepage = http://click.pocoo.org/5/;
       license = licenses.bsdOriginal;
       description = "A simple wrapper around optparse for powerful command line utilities.";
