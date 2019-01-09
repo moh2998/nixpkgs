@@ -261,9 +261,7 @@ in {
         ExecStart = "${cfg.package.bin}/bin/grafana-server -homepath ${cfg.dataDir}";
         WorkingDirectory = cfg.dataDir;
         User = "grafana";
-        Restart = "on-failure";
-        RestartSec = "30s";
-        StartLimitInterval = "5min";
+        Restart = "always";
       };
       preStart = ''
         ln -fs ${cfg.package}/share/grafana/conf ${cfg.dataDir}
