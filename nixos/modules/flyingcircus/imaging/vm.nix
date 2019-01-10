@@ -41,7 +41,8 @@ with lib;
             echo "copying out store paths"
             time (
               storePaths="$(perl ${pkgs.pathsFromGraph} xchg/closure)"
-              tar c $storePaths | lz4 --no-frame-crc > xchg/store.tar.lz4
+              tar c --owner=0 --group=0 $storePaths | \
+                lz4 --no-frame-crc > xchg/store.tar.lz4
             )
           '';
           postVM = ''
