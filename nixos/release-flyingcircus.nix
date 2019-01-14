@@ -2,7 +2,7 @@
 # small subset of Nixpkgs, mostly useful for servers that need fast
 # security updates.
 
-{ nixpkgs ? { outPath = ./..; revCount = 56789; shortRev = "gfedcba"; }
+{ nixpkgs ? { outPath = ./..; revCount = 0; shortRev = "gfedcba"; }
 , stableBranch ? false
 , supportedSystems ? [ "x86_64-linux" ] # no i686-linux
 , buildImage ? true
@@ -40,7 +40,7 @@ let
 
   version = builtins.readFile ../.version;
   versionSuffix =
-    (if stableBranch then "." else "pre") + "${toString (nixpkgs.revCount - 67824)}.${nixpkgs.shortRev}";
+    (if stableBranch then "." else "pre") + "${toString nixpkgs.revCount}.${nixpkgs.shortRev}";
 
   # A bootable Flying Circus disk image (raw) that can be extracted onto
   # Ceph RBD volume.
