@@ -1,21 +1,27 @@
 { pkgs, nixpkgs, version, versionSuffix }:
 
-with pkgs;
-pkgs.releaseTools.channel {
+pkgs.releaseTools.makeSourceTarball {
   name = "nixos-channel";
+
   src = nixpkgs;
+
   inherit version versionSuffix;
-  constituents = [ nixpkgs ];
+
   buildInputs = [ pkgs.nix ];
 
-  patchPhase = ''
-    echo "${version}" > .version
-    echo "${versionSuffix}" > .version-suffix
+  distPhase = ''
+    rm -rf .git
+    echo -n $VERSION_SUFFIX > .version-suffix
+    echo -n ${nixpkgs.rev or nixpkgs.shortRev} > .git-revision
+    releaseName=nixos-$VERSION$VERSION_SUFFIX
+    mkdir -p $out/tarballs
+    cp -prd . ../$releaseName
+    chmod -R u+w ../$releaseName
+    ln -s . ../$releaseName/nixpkgs # hack to make ‘<nixpkgs>’ work
+    NIX_STATE_DIR=$TMPDIR nix-env -f ../$releaseName/default.nix -qaP --meta --xml \* > /dev/null
+    cd ..
+    chmod -R u+w $releaseName
+    tar cfJ $out/tarballs/$releaseName.tar.xz $releaseName
+    echo "channel - $out/tarballs/$releaseName.tar.xz" > "$out/nix-support/hydra-build-products"
   '';
-  meta = {
-    description = "NixOS - Flying Circus flavour";
-    homepage = "https://flyingcircus.io/doc/";
-    license = [ licenses.bsd3 ];
-    maintainer = with maintainers; [ ckauhaus theuni ];
-  };
 }
