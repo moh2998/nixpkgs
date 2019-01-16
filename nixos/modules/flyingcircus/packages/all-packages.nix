@@ -282,6 +282,8 @@ in rec {
     inherit (pkgs.darwin.apple_sdk.frameworks) CoreServices Cocoa;
     x86Only = true;
   };
+  qemu_test = lowPrio (qemu.override { x86Only = true; nixosTestRunner = true; });
+
   qpress = pkgs.callPackage ./percona/qpress.nix { };
 
   rabbitmq_server_3_6_5 = pkgs.callPackage ./rabbitmq/server-3.6.5.nix { };
