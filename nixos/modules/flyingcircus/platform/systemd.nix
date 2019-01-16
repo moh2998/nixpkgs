@@ -23,6 +23,12 @@ in {
       install -d -o root -g service -m 02775 /etc/local/systemd
     '';
 
+    systemd.extraConfig = ''
+      DefaultRestartSec=3
+      DefaultStartLimitInterval=60
+      DefaultStartLimitBurst=3
+    '';
+
     systemd.units =
       let
         unit_files = if (builtins.pathExists "/etc/local/systemd")

@@ -1,17 +1,16 @@
 { pkgs, nixpkgs, version, versionSuffix }:
 
-pkgs.releaseTools.makeSourceTarball {
+pkgs.releaseTools.sourceTarball {
   name = "nixos-channel";
 
   src = nixpkgs;
 
-  officialRelease = false; # FIXME: fix this in makeSourceTarball
   inherit version versionSuffix;
 
   buildInputs = [ pkgs.nix ];
 
   distPhase = ''
-    rm -rf .git
+    rm -rf .git result*
     echo -n $VERSION_SUFFIX > .version-suffix
     echo -n ${nixpkgs.rev or nixpkgs.shortRev} > .git-revision
     releaseName=nixos-$VERSION$VERSION_SUFFIX
@@ -23,5 +22,6 @@ pkgs.releaseTools.makeSourceTarball {
     cd ..
     chmod -R u+w $releaseName
     tar cfJ $out/tarballs/$releaseName.tar.xz $releaseName
+    echo "channel - $out/tarballs/$releaseName.tar.xz" > "$out/nix-support/hydra-build-products"
   '';
 }

@@ -42,6 +42,8 @@ in
   options = {
 
     flyingcircus.roles.mailserver = {
+      # The mailserver role was/is thought to implement an entire mailserver,
+      # and would be billed as component.
 
       enable = lib.mkOption {
         type = lib.types.bool;
@@ -53,11 +55,25 @@ in
       };
 
     };
+
+    flyingcircus.roles.mailout = {
+      # Mailout is considered to be included in the webgateway, but only
+      # sometimes required. So it's a separate role, which is not a billable
+      # component.
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = ''
+          Enable the Flying Circus mailserver out role and configure
+          mailout on all nodes in this RG/location.
+        '';
+      };
+    };
   };
 
   config = lib.mkMerge [
 
-   (lib.mkIf cfg.roles.mailserver.enable {
+   (lib.mkIf ( cfg.roles.mailserver.enable || cfg.roles.mailout.enable ) {
       services.postfix.enable = true;
 
       # Allow all networks on the SRV interface. We expect only trusted machines
