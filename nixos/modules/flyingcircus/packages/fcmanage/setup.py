@@ -9,8 +9,9 @@ from setuptools import setup
 
 
 test_deps = [
-    'pytest',
+    'freezegun',
     'mock',
+    'pytest',
 ]
 
 

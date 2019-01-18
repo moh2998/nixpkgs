@@ -1,4 +1,4 @@
-from fc.util.spread import Spread
+from fc.manage.spread import Spread
 from freezegun import freeze_time
 
 

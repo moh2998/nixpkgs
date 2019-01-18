@@ -22,6 +22,7 @@ py.buildPythonPackage rec {
   src = ./.;
 
   buildInputs = [
+    py.freezegun
     py.mock
     py.pytest
     py.pytest-runner

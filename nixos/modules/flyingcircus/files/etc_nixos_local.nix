@@ -2,7 +2,6 @@
 { pkgs, ... }:
 {
 
-# flyingcircus.agent.enable = false;
 # environment.systemPackages = [
 # ];
 
