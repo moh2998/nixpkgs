@@ -551,12 +551,6 @@ in
           name = "prometheus.yaml";
           text = ''
             apiVersion: 1
-
-            # list of datasources that should be deleted from the database
-            deleteDatasources:
-               - name: Prometheus
-                 orgId: 1
-
             datasources:
             - name: Prometheus
               type: prometheus
