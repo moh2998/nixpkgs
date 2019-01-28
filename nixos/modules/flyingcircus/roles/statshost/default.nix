@@ -120,8 +120,6 @@ let
   grafanaJsonDashboardPath = "${config.services.grafana.dataDir}/dashboards";
   grafanaProvisioningPath = "${config.services.grafana.dataDir}/provisioning";
 
-  prometheusMigration = builtins.pathExists /var/lib/prometheus;
-
 in
 {
 
@@ -364,8 +362,6 @@ in
         listenAddress = prometheusListenAddress;
         dataDir = "/srv/prometheus";
         remoteRead =
-          (optional prometheusMigration { url = "http://localhost:9094/api/v1/read"; })
-          ++
           [ { url = "http://localhost:8086/api/v1/prom/read?db=downsampled"; } ];
         remoteWrite = [
           { url = "http://localhost:8086/api/v1/prom/write?db=prometheus";
@@ -488,33 +484,6 @@ in
 
     })
 
-    (mkIf ((cfgStatsGlobal.enable || cfgStatsRG.enable) && prometheusMigration) {
-
-      # Read old data until expired. ~3 Month
-      systemd.services.prometheus1 = {
-        wantedBy = [ "multi-user.target" ];
-        after    = [ "network.target" ];
-        preStart = ''
-          mkdir -p /run/prometheus1
-          echo "global:" > /run/prometheus1/prometheus.yaml
-        '';
-        script = ''
-          #!/bin/sh
-          exec ${pkgs.prometheus_1}/bin/prometheus \
-            -web.listen-address "localhost:9094" \
-            -config.file /run/prometheus1/prometheus.yaml \
-            -storage.local.path=/var/lib/prometheus/metrics
-        '';
-        serviceConfig = {
-          User = "prometheus";
-          Restart  = "always";
-          WorkingDirectory = "/var/lib/prometheus";
-          PermissionsStartOnly = "true";
-          LimitNOFILE = 65535;
-        };
-      };
-    })
-
     # Grafana
     (mkIf (cfgStatsGlobal.enable || cfgStatsRG.enable) {
       services.grafana = {
@@ -551,12 +520,6 @@ in
           name = "prometheus.yaml";
           text = ''
             apiVersion: 1
-
-            # list of datasources that should be deleted from the database
-            deleteDatasources:
-               - name: Prometheus
-                 orgId: 1
-
             datasources:
             - name: Prometheus
               type: prometheus

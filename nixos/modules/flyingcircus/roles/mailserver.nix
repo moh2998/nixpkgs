@@ -4,10 +4,13 @@ let
   cfg = config.flyingcircus;
   fclib = import ../lib;
 
-  mailoutService = lib.findFirst
-    (s: s.service == "mailserver-mailout")
-    null
-    config.flyingcircus.enc_services;
+  mailoutService =
+    let services =
+      # Prefer mailout. This would allow splitting in and out automagically.
+      (fclib.listServiceAddresses config "mailout-mailout" ++
+       fclib.listServiceAddresses config "mailserver-mailout");
+    in
+      if services == [] then null else builtins.head services;
 
   myHostname = (fclib.configFromFile /etc/local/postfix/myhostname "");
 
@@ -153,7 +156,7 @@ in
 
     (lib.mkIf (!cfg.roles.mailserver.enable && mailoutService != null) {
       networking.defaultMailServer.directDelivery = true;
-      networking.defaultMailServer.hostName = mailoutService.address;
+      networking.defaultMailServer.hostName = mailoutService;
       networking.defaultMailServer.root = "admin@flyingcircus.io";
       # XXX change to fcio.net once #14970 is solved
       networking.defaultMailServer.domain = "gocept.net";
