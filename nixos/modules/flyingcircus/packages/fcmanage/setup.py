@@ -9,14 +9,15 @@ from setuptools import setup
 
 
 test_deps = [
-    'pytest',
+    'freezegun',
     'mock',
+    'pytest',
 ]
 
 
 setup(
     name='fc.manage',
-    version='2.1',
+    version='2.2',
     description=__doc__,
     url='https://flyingcircus.io',
     author='Christian Theune, Christian Kauhaus, Christian Zagrodnick',

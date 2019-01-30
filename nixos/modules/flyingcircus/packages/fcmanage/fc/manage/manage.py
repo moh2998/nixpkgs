@@ -2,7 +2,7 @@
 
 from fc.util.directory import connect
 from fc.util.lock import locked
-from fc.util.spread import Spread
+from .spread import Spread, NullSpread
 import argparse
 import fc.maintenance
 import fc.maintenance.lib.shellscript
@@ -21,13 +21,8 @@ import subprocess
 import sys
 import tempfile
 
-# TODO
-#
-# - How do we cope for emergency updates where we need to update *now*? How can
-#   we force this?
-
 enc = {}
-spread = None
+spread = NullSpread()
 
 ACTIVATE = """\
 set -e
@@ -45,9 +40,15 @@ class Channel:
     # global, to avoid re-connecting (with ssl handshake and all)
     session = requests.session()
     hydra_reachable = True
+    is_local = False
 
     def __init__(self, url):
-        self.url = self.resolved_url = url
+        self.url = url
+        if url.startswith("file://"):
+            self.is_local = True
+            self.resolved_url = url.replace('file://', '')
+            return
+        self.resolved_url = url
         while True:
             try:
                 response = self.session.head(self.resolved_url, timeout=60)
@@ -71,6 +72,8 @@ class Channel:
             for element in reversed(url.split('/')):
                 if element:
                     return element
+        if self.is_local:
+            return '<Channel {}>'.format(self.resolved_url)
         channel = last(self.url)
         revision = last(self.resolved_url)
         if channel == revision:  # channel unknown
@@ -100,6 +103,12 @@ class Channel:
 
     def load(self, name):
         """Load channel as given name."""
+        if self.is_local:
+            raise RuntimeError("`load` not applicable for local channels")
+        if not self.hydra_reachable:
+            logging.warn("Hydra not reachable - skipping update")
+            return
+        logging.info("Performing channel update from %s", self.resolved_url)
         subprocess.check_call(
             ['nix-channel', '--add', self.resolved_url, name])
         subprocess.check_call(['nix-channel', '--update', name])
@@ -107,8 +116,11 @@ class Channel:
     def switch(self, build_options):
         """Build the "self" channel and switch system to it."""
         logging.info('Building {}'.format(self))
-        subprocess.check_call(
-            ['nixos-rebuild', '--no-build-output', 'switch'] + build_options)
+        args = ['nixos-rebuild', '--no-build-output']
+        if self.is_local:
+            args.extend(['-I', 'nixpkgs=' + self.resolved_url])
+        args.extend(['switch'] + build_options)
+        subprocess.check_call(args)
 
     def prepare_maintenance(self):
         logging.info('Preparing maintenance')
@@ -163,30 +175,6 @@ class Channel:
                 300, comment='\n'.join(msg)))
 
 
-class BuildState:
-    """Track if fc-manage was last run from a channel or local checkout."""
-
-    STATEDIR = "/var/lib/fc-manage"
-
-    def __init__(self):
-        self.dev_marker = p.join(self.STATEDIR, 'develop')
-
-    def set_dev(self):
-        if not p.exists(self.dev_marker):
-            os.makedirs(self.STATEDIR, exist_ok=True)
-            open(self.dev_marker, 'a').close()
-
-    def set_channel(self):
-        try:
-            os.unlink(self.dev_marker)
-        except OSError:
-            pass
-
-    @property
-    def is_dev(self):
-        return p.exists(self.dev_marker)
-
-
 def load_enc(enc_path):
     """Tries to read enc.json"""
     global enc
@@ -230,19 +218,23 @@ def inplace_update(filename, data):
         os.fsync(f.fileno())
 
 
+def retrieve(directory_lookup, tgt):
+    logging.info('Retrieving {} ...'.format(tgt))
+    try:
+        data = directory_lookup()
+    except Exception:
+        logging.exception('Error retrieving data:')
+        return
+    try:
+        conditional_update('/etc/nixos/{}'.format(tgt), data)
+    except (IOError, OSError):
+        inplace_update('/etc/nixos/{}'.format(tgt), data)
+
+
 def write_json(calls):
     """Writes JSON files from a list of (lambda, filename) pairs."""
-    for lookup, target in calls:
-        logging.info('Retrieving {} ...'.format(target))
-        try:
-            data = lookup()
-        except Exception:
-            logging.exception('Error retrieving data:')
-            continue
-        try:
-            conditional_update('/etc/nixos/{}'.format(target), data)
-        except (IOError, OSError):
-            inplace_update('/etc/nixos/{}'.format(target), data)
+    for call in calls:
+        retrieve(*call)
 
 
 def system_state():
@@ -303,13 +295,8 @@ def build_channel_with_maintenance(build_options):
     if not enc or not enc.get('parameters'):
         logging.warning('No ENC data. Not building channel.')
         return
-    global spread
-    if spread and not spread.is_due():
-        return build(build_options)
     # always rebuild current channel (ENC updates, activation scripts etc.)
-    current_channel = Channel.current('nixos')
-    if current_channel:
-        current_channel.switch(build_options)
+    build_channel(build_options, update=False)
     # scheduled update already present?
     if Channel.current('next'):
         rm = fc.maintenance.ReqManager()
@@ -320,19 +307,18 @@ def build_channel_with_maintenance(build_options):
             return
     # scheduled update available?
     next_channel = Channel(enc['parameters'].get('environment_url'))
-    if not next_channel:
+    if not next_channel or next_channel.is_local:
+        logging.warn("switch-in-maintenance incompatible with local checkout")
         return
-    if next_channel != current_channel and next_channel.hydra_reachable:
+    current_channel = Channel.current('nixos')
+    if next_channel != current_channel:
         logging.info('Preparing switch from {} to {}.'.format(
             current_channel, next_channel))
         next_channel.prepare_maintenance()
 
 
-def build_channel(build_options):
+def build_channel(build_options, update=True):
     global spread
-    if spread and not spread.is_due():
-        return build(build_options)
-    logging.info("Performing regular channel update.")
     try:
         if enc and enc.get('parameters'):
             channel = Channel(enc['parameters']['environment_url'])
@@ -340,43 +326,31 @@ def build_channel(build_options):
             channel = Channel.current('nixos')
         if not channel:
             return
-        if channel.hydra_reachable:
+        if update and spread.is_due() and not channel.is_local:
             channel.load('nixos')
         channel.switch(build_options)
-        BuildState().set_channel()
     except Exception:
         logging.exception('Error switching channel')
         sys.exit(1)
 
 
 def build_dev(build_options):
-    nixpkgs = display_nixpkgs = '/root/nixpkgs'
-    if os.path.islink(nixpkgs):
-        display_nixpkgs = '{} (-> {})'.format(
-            nixpkgs, os.readlink(nixpkgs))
+    print("""\
+fc-manage -d/--development has been deprecated. Use dev environment instead.
 
-    logging.info("Building development checkout in %s.", display_nixpkgs)
-    subprocess.check_call(
-        ['nixos-rebuild', '-I', 'nixpkgs='+nixpkgs, 'switch'] +
-        build_options)
-    BuildState().set_dev()
+HOWTO:
+
+- Create an environment `dev-$USER` which points to
+  `file:///home/$USER/nixpkgs` (or similar).
+- Switch node to `dev-$USER` in directory.
+- rsync nixpkgs to location mentioned in environment.
+- Run `fc-manage -b -e`.
+
+Note: there is no need to switch off `flyingcircus.agent.enable`.""")
 
 
-def build(build_options):
-    if BuildState().is_dev:
-        build_dev(build_options)
-    else:
-        channel = Channel.current('nixos')
-        if channel:
-            try:
-                channel.switch(build_options)
-            except Exception:
-                logging.exception('Error switching channel')
-                sys.exit(1)
-        else:
-            logging.error("No 'nixos' channel present .nix-channels. "
-                          "Try `fc-manage --channel`.")
-            sys.exit(1)
+def build_no_update(build_options):
+    return build_channel(build_options, update=False)
 
 
 def maintenance():
@@ -437,10 +411,9 @@ def parse_args():
                        'maintenance')
     build.add_argument('-d', '--development', default=False, dest='build',
                        action='store_const', const='build_dev',
-                       help='switch machine to local checkout in '
-                       '/root/nixpkgs')
+                       help='(deprecated, use dev-* environment)')
     build.add_argument('-b', '--build', default=False, dest='build',
-                       action='store_const', const='build',
+                       action='store_const', const='build_no_update',
                        help='rebuild channel or local checkout whatever '
                        'is currently active')
     a.add_argument('-v', '--verbose', action='store_true', default=False)

@@ -61,3 +61,32 @@ class Spread:
         else:
             _log.info('%s is due at %s', self.jobname, _fmt_time(due))
             return False
+
+
+class NullSpread:
+    """Stripped down version of `Spread` which is always due."""
+
+    stampfile = None
+    interval = 0
+    jobname = ''
+    offset = None
+
+    def __init__(self, stampfile=None, interval=0, jobname=''):
+        pass
+
+    def generate(self):
+        pass
+
+    def configure(self):
+        pass
+
+    def touch(self, reference=None):
+        pass
+
+    def next_due(self):
+        """Always due."""
+        return time.time()
+
+    def is_due(self):
+        """Always due."""
+        return True
