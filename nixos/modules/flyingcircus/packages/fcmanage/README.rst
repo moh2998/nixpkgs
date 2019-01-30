@@ -21,7 +21,8 @@ fc-manage --build (-b)
     Update the system, but don't pull channel updates from Hydra.
 
 fc-manage --directory (-e)
-    Updates various ENC dumps in `/etc/nixos` from the directory.
+    Updates various ENC dumps in `/etc/nixos` from the directory: environment,
+    RAM/disk sizings, users, ...
 
 
 Invoke :command:`fc-manage --help` for a full list of options.
@@ -55,16 +56,16 @@ Flying Circus integration
 The most important NixOS options in `/etc/nixos/local.nix` that control the
 fc.manage timers are:
 
+flyingcircus.agent.enable
+    Set to false to disable the timer (default: true).
+
 flyingcircus.agent.with-maintenance
-    Build channel updates when they arrive, but defer activation to a scheduled
-    maintenance window. Maintenance is scheduled automatically.
+    Builds channel updates when they arrive, but defers activation to a
+    scheduled maintenance window. Maintenance is scheduled automatically.
 
 flyingcircus.agent.steps
     Controls the configuration steps which are run each time the timer triggers.
     See :command:`fc-manage --help` for available options.
-
-flyingcircus.agent.enable
-    Turn off the fc-manage systemd timer. Should only be needed in rare circumstances.
 
 
 fc-resize usage
