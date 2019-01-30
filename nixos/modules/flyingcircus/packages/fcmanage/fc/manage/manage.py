@@ -218,19 +218,23 @@ def inplace_update(filename, data):
         os.fsync(f.fileno())
 
 
+def retrieve(directory_lookup, tgt):
+    logging.info('Retrieving {} ...'.format(tgt))
+    try:
+        data = directory_lookup()
+    except Exception:
+        logging.exception('Error retrieving data:')
+        return
+    try:
+        conditional_update('/etc/nixos/{}'.format(tgt), data)
+    except (IOError, OSError):
+        inplace_update('/etc/nixos/{}'.format(tgt), data)
+
+
 def write_json(calls):
     """Writes JSON files from a list of (lambda, filename) pairs."""
-    for lookup, target in calls:
-        logging.info('Retrieving {} ...'.format(target))
-        try:
-            data = lookup()
-        except Exception:
-            logging.exception('Error retrieving data:')
-            continue
-        try:
-            conditional_update('/etc/nixos/{}'.format(target), data)
-        except (IOError, OSError):
-            inplace_update('/etc/nixos/{}'.format(target), data)
+    for call in calls:
+        retrieve(*call)
 
 
 def system_state():

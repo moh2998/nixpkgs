@@ -16,7 +16,7 @@ let
 in
 py.buildPythonPackage rec {
   name = "fc-manage-${version}";
-  version = "2.1";
+  version = "2.2";
   namePrefix = "";
   dontStrip = true;
   src = ./.;
