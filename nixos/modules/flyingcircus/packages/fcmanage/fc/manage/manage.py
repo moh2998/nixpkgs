@@ -21,15 +21,19 @@ import subprocess
 import sys
 import tempfile
 
+_log = logging.getLogger()
 enc = {}
 spread = NullSpread()
 
 ACTIVATE = """\
 set -e
-nix-channel --add {url} nixos
-nix-channel --update nixos
-nixos-rebuild switch
-nix-channel --remove next
+(
+    flock -x 9
+    nix-channel --add {url} nixos
+    nix-channel --update nixos
+    nixos-rebuild switch
+    nix-channel --remove next
+) 9>> /run/lock/fc-manage.lock
 """
 
 
@@ -55,7 +59,7 @@ class Channel:
                 response.raise_for_status()
             except (requests.exceptions.ConnectionError,
                     requests.packages.urllib3.exceptions.ConnectionError):
-                logging.warning(
+                _log.warning(
                     'Cannot reach hydra, falling back to local build (%s)',
                     url)
                 self.hydra_reachable = False
@@ -98,7 +102,7 @@ class Channel:
                     if name == channel_name:
                         return Channel(url)
         except OSError:
-            logging.exception('Failed to read .nix-channels')
+            _log.exception('Failed to read .nix-channels')
             raise
 
     def load(self, name):
@@ -106,16 +110,16 @@ class Channel:
         if self.is_local:
             raise RuntimeError("`load` not applicable for local channels")
         if not self.hydra_reachable:
-            logging.warn("Hydra not reachable - skipping update")
+            _log.warn("Hydra not reachable - skipping update")
             return
-        logging.info("Performing channel update from %s", self.resolved_url)
+        _log.info("Performing channel update from %s", self.resolved_url)
         subprocess.check_call(
             ['nix-channel', '--add', self.resolved_url, name])
         subprocess.check_call(['nix-channel', '--update', name])
 
     def switch(self, build_options):
         """Build the "self" channel and switch system to it."""
-        logging.info('Building {}'.format(self))
+        _log.info('Building {}'.format(self))
         args = ['nixos-rebuild', '--no-build-output']
         if self.is_local:
             args.extend(['-I', 'nixpkgs=' + self.resolved_url])
@@ -123,7 +127,7 @@ class Channel:
         subprocess.check_call(args)
 
     def prepare_maintenance(self):
-        logging.info('Preparing maintenance')
+        _log.info('Preparing maintenance')
         self.load('next')
         call = subprocess.Popen(
              ['nixos-rebuild',
@@ -134,7 +138,7 @@ class Channel:
         output = []
         for line in call.stderr.readlines():
             line = line.decode('UTF-8').strip()
-            logging.warning(line)
+            _log.warning(line)
             output.append(line)
         changes = self.detect_changes(output)
         self.register_maintenance(changes)
@@ -219,11 +223,11 @@ def inplace_update(filename, data):
 
 
 def retrieve(directory_lookup, tgt):
-    logging.info('Retrieving {} ...'.format(tgt))
+    _log.info('Retrieving {} ...'.format(tgt))
     try:
         data = directory_lookup()
     except Exception:
-        logging.exception('Error retrieving data:')
+        _log.exception('Error retrieving data:')
         return
     try:
         conditional_update('/etc/nixos/{}'.format(tgt), data)
@@ -268,7 +272,7 @@ def system_state():
 def update_inventory():
     if (not enc or not enc.get('parameters') or
             not enc['parameters'].get('directory_password')):
-        logging.warning('No directory password. Not updating inventory.')
+        _log.warning('No directory password. Not updating inventory.')
         return
     try:
         # For fc-manage all nodes need to talk about *their* environment which
@@ -276,7 +280,7 @@ def update_inventory():
         # ring 1 API.
         directory = connect(enc, 1)
     except socket.error:
-        logging.warning('No directory connection. Not updating inventory.')
+        _log.warning('No directory connection. Not updating inventory.')
         return
 
     write_json([
@@ -293,7 +297,7 @@ def update_inventory():
 
 def build_channel_with_maintenance(build_options):
     if not enc or not enc.get('parameters'):
-        logging.warning('No ENC data. Not building channel.')
+        _log.warning('No ENC data. Not building channel.')
         return
     # always rebuild current channel (ENC updates, activation scripts etc.)
     build_channel(build_options, update=False)
@@ -302,17 +306,17 @@ def build_channel_with_maintenance(build_options):
         rm = fc.maintenance.ReqManager()
         rm.scan()
         if rm.requests:
-            logging.info('Channel update prebooked @ {}'.format(
+            _log.info('Channel update prebooked @ {}'.format(
                 list(rm.requests.values())[0].next_due))
             return
     # scheduled update available?
     next_channel = Channel(enc['parameters'].get('environment_url'))
     if not next_channel or next_channel.is_local:
-        logging.warn("switch-in-maintenance incompatible with local checkout")
-        return
+        _log.error("switch-in-maintenance incompatible with local checkout")
+        sys.exit(1)
     current_channel = Channel.current('nixos')
     if next_channel != current_channel:
-        logging.info('Preparing switch from {} to {}.'.format(
+        _log.info('Preparing switch from {} to {}.'.format(
             current_channel, next_channel))
         next_channel.prepare_maintenance()
 
@@ -330,7 +334,7 @@ def build_channel(build_options, update=True):
             channel.load('nixos')
         channel.switch(build_options)
     except Exception:
-        logging.exception('Error switching channel')
+        _log.exception('Error switching channel')
         sys.exit(1)
 
 
@@ -350,11 +354,15 @@ Note: there is no need to switch off `flyingcircus.agent.enable`.""")
 
 
 def build_no_update(build_options):
+    try:
+        os.unlink('/root/nixpkgs')  # we don't need that anymore
+    except EnvironmentError:
+        pass
     return build_channel(build_options, update=False)
 
 
 def maintenance():
-    logging.info('Performing scheduled maintenance')
+    _log.info('Performing scheduled maintenance')
     import fc.maintenance.reqmanager
     fc.maintenance.reqmanager.transaction()
 
@@ -368,7 +376,7 @@ def seed_enc(path):
 
 
 def exit_timeout(signum, frame):
-    logging.error("Execution timed out. Exiting.")
+    _log.error("Execution timed out. Exiting.")
     sys.exit(1)
 
 
@@ -459,7 +467,7 @@ def main():
     signal.alarm(args.timeout)
 
     logging.basicConfig(format='%(levelname)s: %(message)s',
-                        level=logging.DEBUG if args.verbose else logging.INFO)
+                        level=_log.DEBUG if args.verbose else logging.INFO)
     # this is really annoying
     logging.getLogger('iso8601').setLevel(logging.WARNING)
     logging.getLogger('requests').setLevel(logging.WARNING)
