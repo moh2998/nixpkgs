@@ -28,7 +28,7 @@ spread = NullSpread()
 ACTIVATE = """\
 set -e
 (
-    flock -x 9
+    flock 9
     nix-channel --add {url} nixos
     nix-channel --update nixos
     nixos-rebuild switch
@@ -467,7 +467,7 @@ def main():
     signal.alarm(args.timeout)
 
     logging.basicConfig(format='%(levelname)s: %(message)s',
-                        level=_log.DEBUG if args.verbose else logging.INFO)
+                        level=logging.DEBUG if args.verbose else logging.INFO)
     # this is really annoying
     logging.getLogger('iso8601').setLevel(logging.WARNING)
     logging.getLogger('requests').setLevel(logging.WARNING)

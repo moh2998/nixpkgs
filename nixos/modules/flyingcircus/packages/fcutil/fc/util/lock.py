@@ -14,9 +14,9 @@ def locked(lockfile):
     # touch into existence
     open(lockfile, 'a').close()
     with open(lockfile, 'r+', buffering=1) as f:
-        fcntl.lockf(f, fcntl.LOCK_EX)
+        fcntl.flock(f, fcntl.LOCK_EX)
+        f.truncate(0)
         f.seek(0)
         print(os.getpid(), file=f)
-        f.truncate()
         yield
         f.truncate(0)
