@@ -249,6 +249,7 @@ in {
         bash
         check-journal
         coreutils
+        fcsensusyntax
         glibc
         lm_sensors
         nagiosPluginsOfficial
@@ -306,6 +307,11 @@ in {
         notification = "Clock is skewed";
         command = "check_ntp_time -H 0.de.pool.ntp.org";
         interval = 300;
+      };
+      sensu_syntax = {
+        notification = "Problematic check definitions in /etc/local/sensu-client";
+        command = "fc-sensu-syntax";
+        interval = 60;
       };
       internet_uplink_ipv4 = uplink "4";
       internet_uplink_ipv6 = uplink "6";
