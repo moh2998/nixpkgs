@@ -30,6 +30,7 @@ journal/
 *.jpeg
 *.jpg
 *.JPG
+*.json
 *.kml
 *.kmz
 *.lock
@@ -38,6 +39,7 @@ journal/
 *.log.?
 *.lzh
 *.m4a
+*.md
 *.mid
 mongodb/*.wt
 *.mp3

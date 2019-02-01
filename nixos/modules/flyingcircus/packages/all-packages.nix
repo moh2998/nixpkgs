@@ -155,6 +155,7 @@ in rec {
   fcmaintenance = pkgs.callPackage ./fcmaintenance { };
   fcmanage = pkgs.callPackage ./fcmanage { };
   fcsensuplugins = pkgs.callPackage ./fcsensuplugins { };
+  fcsensusyntax = pkgs.callPackage ./fcsensusyntax { };
   fcuserscan = pkgs.callPackage ./fcuserscan.nix { };
   fclogcheckhelper = pkgs.callPackage ./fclogcheckhelper { };
   fix-so-rpath = pkgs.callPackage ./fix-so-rpath {};
