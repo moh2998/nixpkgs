@@ -78,7 +78,7 @@ fn run<P: AsRef<Path>>(sensu_config_dir: P) -> Fallible<CheckResults> {
     Ok(read_dir(d)
         .context(format_err!("Cannot open `{}'", d.display()))?
         .filter_map(|e| e.ok().map(|e| e.path()))
-        .filter(|p| p.is_file() && p.extension().unwrap_or_default() == "json")
+        .filter(|p| !p.is_dir() && p.extension().unwrap_or_default() == "json")
         .map(|p| {
             let stat = check(&p);
             (p, stat)
