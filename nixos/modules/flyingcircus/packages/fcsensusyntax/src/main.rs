@@ -1,40 +1,27 @@
+#[cfg(test)]
+mod test;
+
 #[macro_use]
 extern crate clap;
 
 use clap::Arg;
-use failure::{format_err, Error, Fallible, ResultExt};
+use failure::{Error, Fallible};
 use serde_derive::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fmt;
-use std::fs::{read_dir, File};
+use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::process;
-
-#[derive(Debug, Clone, Deserialize)]
-struct ClientDef {
-    checks: HashMap<String, Value>,
-}
+use walkdir::Result as WResult;
+use walkdir::WalkDir;
 
 #[derive(Debug)]
 enum Status {
-    Good(usize),  // `Ok` is already used by `Result`
+    Good(usize), // `Ok` is already used by `Result`
     Warning(&'static str),
     Error(Error),
-}
-
-impl fmt::Display for Status {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Status::Good(i) => write!(f, "{} check definition(s)", i),
-            Status::Warning(msg) => write!(f, "{}", msg),
-            Status::Error(e) => {
-                let causes: Vec<_> = e.iter_chain().map(|c| c.to_string()).collect();
-                write!(f, "{}", causes.join(": "))
-            }
-        }
-    }
 }
 
 impl Status {
@@ -55,12 +42,32 @@ impl Status {
     }
 }
 
-fn decode(json: &Path) -> Fallible<ClientDef> {
-    Ok(serde_json::from_reader(BufReader::new(File::open(json)?))?)
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Status::Good(i) => write!(f, "{} check definition(s)", i),
+            Status::Warning(msg) => write!(f, "{}", msg),
+            Status::Error(e) => {
+                let causes: Vec<_> = e.iter_chain().map(|c| c.to_string()).collect();
+                write!(f, "{}", causes.join(": "))
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct ClientDef {
+    checks: HashMap<String, Value>,
+}
+
+impl ClientDef {
+    fn decode<P: AsRef<Path>>(json: P) -> Fallible<Self> {
+        Ok(serde_json::from_reader(BufReader::new(File::open(json)?))?)
+    }
 }
 
 fn check(sensu_client_check: &Path) -> Status {
-    let def = match decode(sensu_client_check) {
+    let def = match ClientDef::decode(sensu_client_check) {
         Ok(def) => def,
         Err(e) => return Status::Error(e.into()),
     };
@@ -73,15 +80,17 @@ fn check(sensu_client_check: &Path) -> Status {
 
 type CheckResults = Vec<(PathBuf, Status)>;
 
-fn run<P: AsRef<Path>>(sensu_config_dir: P) -> Fallible<CheckResults> {
-    let d = sensu_config_dir.as_ref();
-    Ok(read_dir(d)
-        .context(format_err!("Cannot open `{}'", d.display()))?
-        .filter_map(|e| e.ok().map(|e| e.path()))
-        .filter(|p| !p.is_dir() && p.extension().unwrap_or_default() == "json")
-        .map(|p| {
-            let stat = check(&p);
-            (p, stat)
+fn walk<P: AsRef<Path>>(sensu_config_dir: P) -> Fallible<CheckResults> {
+    let entries = WalkDir::new(sensu_config_dir)
+        .max_depth(1)
+        .into_iter()
+        .collect::<WResult<Vec<_>>>()?;
+    Ok(entries
+        .into_iter()
+        .filter(|e| e.path().extension().unwrap_or_default() == "json" && !e.file_type().is_dir())
+        .map(|e| {
+            let stat = check(e.path());
+            (e.into_path(), stat)
         })
         .collect())
 }
@@ -96,7 +105,8 @@ fn output(mut res: CheckResults) -> i32 {
         1 => println!("WARNING: {} warning(s)", nwarn),
         _ => println!("CRITICAL: {} error(s), {} warning(s)", ncrit, nwarn),
     }
-    res.iter().for_each(|(f, s)| println!("[{}] {}: {}", s.marker(), f.display(), s));
+    res.iter()
+        .for_each(|(p, s)| println!("[{}] {}: {}", s.marker(), p.display(), s));
     max
 }
 
@@ -107,15 +117,12 @@ fn main() {
                 .default_value("/etc/local/sensu-client"),
         )
         .get_matches();
-    match run(m.value_of_os("DIR").unwrap()) {
+    match walk(m.value_of_os("DIR").unwrap()) {
+        Ok(results) => process::exit(output(results)),
         Err(e) => {
-            print!("UNKOWN: {}", e);
-            for cause in e.iter_causes() {
-                print!(": {}", cause)
-            }
-            println!();
+            let causes: Vec<_> = e.iter_chain().map(|c| c.to_string()).collect();
+            println!("UNKOWN: {}", causes.join(": "));
             process::exit(3)
         }
-        Ok(results) => process::exit(output(results)),
     }
 }
