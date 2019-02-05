@@ -27,13 +27,10 @@ spread = NullSpread()
 
 ACTIVATE = """\
 set -e
-(
-    flock 9
-    nix-channel --add {url} nixos
-    nix-channel --update nixos
-    nixos-rebuild switch
-    nix-channel --remove next
-) 9>> /run/lock/fc-manage.lock
+nix-channel --add {url} nixos
+nix-channel --update nixos
+nixos-rebuild switch
+nix-channel --remove next
 """
 
 
