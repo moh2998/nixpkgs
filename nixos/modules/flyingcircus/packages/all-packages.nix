@@ -59,7 +59,6 @@ in rec {
     bazaar
     nodejs-6_x
     nodejs-8_x
-    nodejs-9_x
     pipenv
     shadow
     vim;
@@ -84,6 +83,7 @@ in rec {
     libreoffice-fresh
     mailutils
     nix
+    nodejs-9_x
     openvpn
     php56
     php56Packages
