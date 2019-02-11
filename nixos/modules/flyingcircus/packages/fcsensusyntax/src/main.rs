@@ -35,7 +35,7 @@ impl Status {
 
     fn marker(&self) -> &'static str {
         match self {
-            Status::Good(_) => "=ok=",
+            Status::Good(_) => "ok",
             Status::Warning(_) => "warn",
             Status::Error(_) => "crit",
         }

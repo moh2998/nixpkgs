@@ -103,6 +103,7 @@ in {
           HOME = "/root";
           LANG = "en_US.utf8";
         };
+        # replace `timeout` calls with proper systemd timeouts in systemd >= 237
         script = let interval = toString cfg.agent.interval; in
         ''
           failed=0
