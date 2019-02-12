@@ -60,8 +60,8 @@ in rec {
     nodejs-6_x
     nodejs-8_x
     pipenv
-    shadow
-    vim;
+    vim
+    ;
 
   inherit (pkgs_18_03)
     apacheHttpd

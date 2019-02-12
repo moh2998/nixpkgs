@@ -68,9 +68,9 @@ in {
 
       systemd.tmpfiles.rules = [
         "r! /reboot"
+        "d /var/lib/fc-manage"
         "r /var/lib/fc-manage/stamp-channel-update"
         "d /var/spool/maintenance/archive - - - 90d"
-        "d /var/lib/fc-manage"
       ];
 
       security.sudo.extraConfig = ''
@@ -103,12 +103,13 @@ in {
           HOME = "/root";
           LANG = "en_US.utf8";
         };
+        # replace `timeout` calls with proper systemd timeouts in systemd >= 237
         script = let interval = toString cfg.agent.interval; in
         ''
           failed=0
           mkdir -p /var/lib/fc-manage
-          fc-manage -E ${cfg.enc_path} -i ${interval} ${cfg.agent.steps} || failed=$?
-          fc-resize -E ${cfg.enc_path} || failed=$?
+          timeout 14400 fc-manage -E ${cfg.enc_path} -i ${interval} ${cfg.agent.steps} || failed=$?
+          timeout 900 fc-resize -E ${cfg.enc_path} || failed=$?
           exit $failed
         '';
       };
