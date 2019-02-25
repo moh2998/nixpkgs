@@ -48,7 +48,9 @@ in rec {
   inherit (pkgs_18_09)
     chromedriver
     chromium
+    cups
     elasticsearch6
+    gnupg
     kibana
     mercurial
     mercurialFull
