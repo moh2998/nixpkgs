@@ -47,10 +47,10 @@ in rec {
   # === Imports from newer upstream versions ===
 
   inherit (pkgs_18_09)
+    bazaar
     chromedriver
     chromium
     elasticsearch6
-    bazaar
     gnupg
     imagemagick
     kibana
