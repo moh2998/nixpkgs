@@ -595,7 +595,7 @@
       type = "git";
       url = "git://github.com/nyxcharon/sensu-plugins-systemd.git";
       rev = "be972959c5f6cdc989b1122db72a4b10a1ecce77";
-      sha256 = "123fnj9yiwbzxax9c14zy5iwc3qaldn5nqibs9k0nysr9zwkygpa";
+      sha256 = "0n1jbzs4ls4gmci8zc92nm3mi1n69w2i37k28zlfwxazbm1gyy0z";
       fetchSubmodules = false;
      };
      dependencies = [
