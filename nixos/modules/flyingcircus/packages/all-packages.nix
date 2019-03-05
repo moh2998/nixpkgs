@@ -19,11 +19,12 @@ let
 
   # Please leave the double import in place (the channel build will fail
   # otherwise).
-  pkgs_18_09_src = (import <nixpkgs> {}).fetchFromGitHub {
+  pkgs_18_09_src = (import <nixpkgs> {}).fetchFromGitHub rec {
+    name = "nixpkgs-${rev}";
     owner = "NixOS";
     repo = "nixpkgs";
-    rev = "3b44ccd99";
-    sha256 = "17704307xdkxkgharwnlxg46fzchrfz28niprz4z3cjd50shf6hh";
+    rev = "8c2447fde";
+    sha256 = "1zp6gn7h8mvs8a8fl9bxwm5ah8c3vg7irfihfr3k104byhfq2xd6";
   };
   pkgs_18_09 = import pkgs_18_09_src {
     config = { allowUnfree = true; } // config;
@@ -46,20 +47,27 @@ in rec {
   # === Imports from newer upstream versions ===
 
   inherit (pkgs_18_09)
+    bazaar
     chromedriver
     chromium
     elasticsearch6
+    gnupg
+    imagemagick
     kibana
     mercurial
     mercurialFull
     modsecurity_standalone
     nginxModules
     nodejs-10_x
-    prometheus-haproxy-exporter
-    bazaar
     nodejs-6_x
     nodejs-8_x
     pipenv
+    prometheus-haproxy-exporter
+    python35
+    python35Packages
+    python36
+    python36Packages
+    qt4
     vim
     ;
 
@@ -93,10 +101,6 @@ in rec {
     php71Packages
     php72
     php72Packages
-    python35
-    python35Packages
-    python36
-    python36Packages
     remarshal
     ripgrep
     ronn
@@ -108,6 +112,7 @@ in rec {
     xulrunner
     ;
 
+  cups = mergeOutputs [ "out" "lib" "dev" ] pkgs_18_09.cups;
   libtiff = mergeOutputs [ "out" "bin" "dev" ] pkgs_18_03.libtiff;
   libsndfile = mergeOutputs [ "out" "bin" "dev" ] pkgs_18_03.libsndfile;
   libvorbis = mergeOutputs [ "out" "dev" ] pkgs_18_03.libvorbis;
@@ -168,11 +173,6 @@ in rec {
   http-parser = pkgs.callPackage ./http-parser {
     gyp = pkgs.pythonPackages.gyp;
   };
-
-  imagemagick = imagemagickBig.override {
-    ghostscript = null;
-  };
-  imagemagickBig = pkgs.callPackage ./ImageMagick { };
 
   influxdb = pkgs_18_03.callPackage ./influxdb { };
   innotop = pkgs.callPackage ./percona/innotop.nix { };
