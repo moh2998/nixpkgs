@@ -325,6 +325,8 @@ in rec {
     inherit (pkgs_18_03) buildGoPackage fetchFromGitHub;
   };
 
+  temporal_tables = pkgs.callPackage ./postgresql/temporal_tables { };
+
   uchiwa = pkgs.callPackage ./uchiwa { };
 
   varnish =
