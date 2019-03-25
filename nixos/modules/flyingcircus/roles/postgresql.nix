@@ -125,6 +125,7 @@ in
     services.postgresql.enable = true;
     services.postgresql.package = postgresqlPkg;
     services.postgresql.extraPlugins = [
+      (pkgs.temporal_tables.override { postgresql = postgresqlPkg; })
       (pkgs.postgis.override { postgresql = postgresqlPkg; })
     ] ++ lib.optionals
       (lib.versionAtLeast version "9.6")

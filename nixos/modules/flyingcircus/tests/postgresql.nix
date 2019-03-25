@@ -47,8 +47,9 @@ import ../../../tests/make-test.nix ({ rolename, lib, pkgs, ... }:
         psql --echo-all -d employees < ${selectSql} | grep -5 "John Doe"
       '';
 
-      createExtensions = pkgs.writeScript "rum-tests" ''
+      createExtensions = pkgs.writeScript "extension-tests" ''
         psql employees -c "CREATE EXTENSION rum;"
+        psql employees -c "CREATE EXTENSION temporal_tables;"
       '';
     in
     ''
