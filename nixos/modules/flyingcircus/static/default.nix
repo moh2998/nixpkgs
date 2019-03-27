@@ -104,7 +104,7 @@ with lib;
     flyingcircus.static.ntpservers = {
       # Those are the routers and backup servers. This needs to move to the
       # directory service discovery.
-      dev = [ "barney" "eddie" "patty"];
+      dev = [ "eddie" "patty"];
       whq = [ "barbrady01" "terri" "bob" "lou" ];
       rzob = [ "kenny06" "kenny07" "barbrady02" ];
       rzrl1 = [ "kenny02" "kenny03" "barbrady03" ];
