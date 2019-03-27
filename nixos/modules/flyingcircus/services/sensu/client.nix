@@ -305,7 +305,7 @@ in {
       };
       ntp_time = {
         notification = "Clock is skewed";
-        command = "check_ntp_time -H 0.de.pool.ntp.org";
+        command = "check_ntp_time -H ${elemAt config.services.chrony.servers 0}";
         interval = 300;
       };
       sensu_syntax = {
