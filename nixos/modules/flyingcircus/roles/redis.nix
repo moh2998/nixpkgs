@@ -4,6 +4,14 @@ let
   cfg = config.flyingcircus.roles.redis;
   fclib = import ../lib;
 
+  # This looks clunky.
+  redis_package =
+    if config.flyingcircus.roles.redis.enable
+    then pkgs.redis
+    else if config.flyingcircus.roles.redis4.enable
+    then pkgs.redis4
+    else null;
+
   listen_addresses =
     fclib.listenAddresses config "lo" ++
     fclib.listenAddresses config "ethsrv";
@@ -25,6 +33,16 @@ in
 {
 
   options = {
+    flyingcircus.roles.redis4 = {
+
+      enable = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Enable the Flying Circus Redis4 role.";
+      };
+
+    };
+
     flyingcircus.roles.redis = {
 
       enable = mkOption {
@@ -45,9 +63,10 @@ in
   };
 
   config = mkMerge [
-    (mkIf cfg.enable {
+    (mkIf (redis_package != null) {
 
     services.redis.enable = true;
+    services.redis.package = redis_package;
     services.redis.requirePass = password;
     services.redis.bind = concatStringsSep " " listen_addresses;
     services.redis.extraConfig = extraConfig;
@@ -97,7 +116,7 @@ in
     };
 
     environment.etc."local/redis/README.txt".text = ''
-      Redis is running on this machine.
+      Redis ${redis_package.version} is running on this machine.
 
       You can find the password for the redis in the `password`. You can also change
       the redis password by changing the `password` file.
