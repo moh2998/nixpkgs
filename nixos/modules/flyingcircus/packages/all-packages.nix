@@ -294,6 +294,8 @@ in rec {
   rabbitmq_delayed_message_exchange =
     pkgs.callPackage ./rabbitmq/delayed_message_exchange.nix { };
 
+  redis4 = pkgs.callPackage ./redis/default.nix { };
+
   rust = pkgs.callPackage ./rust/default.nix { };
   rustPlatform = pkgs.recurseIntoAttrs (makeRustPlatform rust);
   makeRustPlatform = rust: fix (self:
