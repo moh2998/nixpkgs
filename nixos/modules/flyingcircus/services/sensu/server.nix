@@ -124,14 +124,12 @@ in {
               tags = "";
             };
             # Permission settings required for sensu
-            # exchange.declare -> configure "keepalives"
-            # queue.declare -> configure "node-*"
-            # queue.bind -> write "node-*"
+            # see https://docs.sensu.io/sensu-core/1.7/guides/securing-rabbitmq
             permissions_body = {
               scope = "client";
-              configure = "^((default|results|keepalives)$)|${client_name}-.*";
-              write = "^((keepalives|results)$)|${client_name}-.*";
-              read = "^(default$)|${client_name}-.*";
+              configure = "((?!keepalives|results).)*";
+              write = "^(keepalives|results|${client_name}.*)$";
+              read = "((?!keepalives|results).)*";
             };
             in ''
               # Configure user and permissions for ${client.node}:
@@ -141,11 +139,6 @@ in {
               ${curl} -XPUT \
                 -d'${builtins.toJSON permissions_body}' \
                 ${api}/permissions/%2Fsensu/${client.node}
-              # Delete wrongly set permission. Can go away after a release.
-              ${curl} -XDELETE \
-                ${api}/permissions/sensu/${client.node} \
-                | ${pkgs.gnugrep}/bin/grep -v "Object Not Found" || true
-
               '')
           sensu_clients);
       in
