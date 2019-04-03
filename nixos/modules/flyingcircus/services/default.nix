@@ -13,6 +13,7 @@
      ./powerdns.nix
      ./prometheus
      ./rabbitmq.nix
+     ./redis.nix
      ./rsyslog.nix
      ./sensu/api.nix
      ./sensu/client.nix
