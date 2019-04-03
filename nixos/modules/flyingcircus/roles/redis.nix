@@ -4,7 +4,6 @@ let
   cfg = config.flyingcircus.roles;
 
 in
-
 {
   options.flyingcircus.roles = {
     redis4.enable = lib.mkEnableOption "Flying Circus Redis v4";
@@ -16,6 +15,8 @@ in
       flyingcircus.services.redis.enable =
         assert !(cfg.redis.enable && cfg.redis4.enable);
         cfg.redis.enable || cfg.redis4.enable;
+
+      flyingcircus.roles.statshost.globalAllowedMetrics = [ "redis" ];
     }
 
     (lib.mkIf cfg.redis4.enable {

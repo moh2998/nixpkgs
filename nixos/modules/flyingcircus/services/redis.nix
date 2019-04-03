@@ -47,8 +47,8 @@ in
     };
   };
 
-  config = mkMerge [
-    (mkIf cfg.enable {
+  config =
+    mkIf cfg.enable {
 
       services.redis.enable = true;
       services.redis.package = cfg.package;
@@ -109,10 +109,5 @@ in
         To change the redis configuration, add a file `custom.conf`, which will be
         appended to the redis configuration.
       '';
-    })
-
-    {
-      flyingcircus.roles.statshost.globalAllowedMetrics = [ "redis" ];
-    }
-  ];
+    };
 }
