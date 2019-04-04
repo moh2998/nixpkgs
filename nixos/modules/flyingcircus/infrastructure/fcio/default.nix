@@ -36,7 +36,7 @@ in
   # the root.
   nix.readOnlyStore = false;
   nix.extraOptions = ''
-    http-connections = 2
+    http-connections = 1
   '';
 
   system.activationScripts.readOnlyStore =
