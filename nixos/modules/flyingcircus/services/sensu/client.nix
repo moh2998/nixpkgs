@@ -237,8 +237,10 @@ in {
     security.sudo.extraConfig = ''
        # Sensu sudo rules
        Cmnd_Alias MULTIPING = ${multiping}/bin/multiping
+       Cmnd_Alias CHECK_DISK = ${fcsensuplugins}/bin/check_disk
 
        %sensuclient ALL=(root) MULTIPING
+       %sensuclient ALL=(root) CHECK_DISK
    '';
 
     systemd.services.sensu-client = {
@@ -331,7 +333,7 @@ in {
       };
       disk = {
         notification = "Disk usage too high";
-        command = "${fcsensuplugins}/bin/check_disk -v -w 90 -c 95";
+        command = "/var/setuid-wrappers/sudo ${fcsensuplugins}/bin/check_disk -v -w 90 -c 95";
         interval = 300;
       };
       writable = {
