@@ -170,6 +170,13 @@ let
           Optional http login credentials for metrics scraping.
         '';
       };
+      proxy_url = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          Optional proxy URL.
+        '';
+      };
       dns_sd_configs = mkOption {
         type = types.listOf promTypes.dns_sd_config;
         default = [];
@@ -363,17 +370,254 @@ let
     };
   };
 
+  promTypes.tls_config = types.submodule {
+    options = {
+      ca_file = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = ''
+          CA certificate to validate API server certificate with.
+        '';
+      };
+      cert_file = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = ''
+          Certificate file for client cert authentication to the server.
+        '';
+      };
+      key_file = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = ''
+          Key file for client cert authentication to the server.
+        '';
+      };
+      server_name = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          ServerName extension to indicate the name of the server.
+          https://tools.ietf.org/html/rfc4366#section-3.1
+        '';
+      };
+      insecure_skip_verify = mkOption {
+        type = types.nullOr types.bool;
+        default = null;
+        description = ''
+          Disable validation of the server certificate.
+        '';
+      };
+    };
+  };
+
+  promTypes.remote_write_config = types.submodule {
+    options = {
+      url = mkOption {
+        type = types.str;
+        description = ''
+          The URL of the endpoint to send samples to.
+        '';
+      };
+      remote_timeout = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          Timeout for requests to the remote write endpoint.
+        '';
+      };
+      write_relabel_configs = mkOption {
+        type = types.nullOr (types.listOf promTypes.relabel_config);
+        default = null;
+        apply = x: map _filter x;
+        description = ''
+          List of remote write relabel configurations.
+        '';
+      };
+      basic_auth = mkOption {
+        type = types.nullOr (types.submodule {
+          options = {
+            username = mkOption {
+              type = types.str;
+              description = ''
+                HTTP username
+              '';
+            };
+            password = mkOption {
+              type = types.str;
+              description = ''
+                HTTP password
+              '';
+            };
+            password_file = mkOption {
+              type = types.path;
+              description = ''
+                HTTP password file.
+                `password` and `password_file` are mutually exclusive.
+              '';
+            };
+          };
+        });
+        default = null;
+        apply = x: mapNullable _filter x;
+        description = ''
+          Sets the `Authorization` header on every remote write request with the
+          configured username and password.
+        '';
+      };
+      bearer_token = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          Sets the `Authorization` header on every remote write request with the
+          configured bearer token. It is mutually exclusive with
+          `bearer_token_file`.
+        '';
+      };
+      bearer_token_file = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = ''
+          Sets the `Authorization` header on every remote write request with the
+          bearer token read from the configured file. It is mutually exclusive
+          with `bearer_token`.
+        '';
+      };
+      tls_config = mkOption {
+        type = types.nullOr promTypes.tls_config;
+        default = null;
+        apply = x: map _filter x;
+        description = ''
+          Configures the remote write request's TLS settings.
+        '';
+      };
+      proxy_url = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          Optional proxy URL.
+        '';
+      };
+      queue_config = mkOption {
+        type = types.nullOr types.attrs;
+        default = null;
+        description = ''
+          Configures the queue used to write to remote storage.
+        '';
+      };
+    };
+  };
+
+  promTypes.remote_read_config = types.submodule {
+    options = {
+      url = mkOption {
+        type = types.str;
+        description = ''
+          The URL of the endpoint to send samples to.
+        '';
+      };
+      required_matchers = mkOption {
+        type = types.nullOr types.attrs;
+        default = null;
+        description = ''
+          An optional list of equality matchers which have to be present in a
+          selector to query the remote read endpoint.
+        '';
+      };
+      remote_timeout = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          Timeout for requests to the remote read endpoint.
+        '';
+      };
+      read_recent = mkOption {
+        type = types.nullOr types.bool;
+        default = null;
+        description = ''
+          Whether reads should be made for queries for time ranges that the
+          local storage should have complete data for.
+        '';
+      };
+      basic_auth = mkOption {
+        type = types.nullOr (types.submodule {
+          options = {
+            username = mkOption {
+              type = types.str;
+              description = ''
+                HTTP username
+              '';
+            };
+            password = mkOption {
+              type = types.str;
+              description = ''
+                HTTP password
+              '';
+            };
+            password_file = mkOption {
+              type = types.path;
+              description = ''
+                HTTP password file.
+                `password` and `password_file` are mutually exclusive.
+              '';
+            };
+          };
+        });
+        default = null;
+        apply = x: mapNullable _filter x;
+        description = ''
+          Sets the `Authorization` header on every remote read request with the
+          configured username and password.
+        '';
+      };
+      bearer_token = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          Sets the `Authorization` header on every remote read request with the
+          configured bearer token. It is mutually exclusive with
+          `bearer_token_file`.
+        '';
+      };
+      bearer_token_file = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        description = ''
+          Sets the `Authorization` header on every remote read request with the
+          bearer token read from the configured file. It is mutually exclusive
+          with `bearer_token`.
+        '';
+      };
+      tls_config = mkOption {
+        type = types.nullOr promTypes.tls_config;
+        default = null;
+        apply = x: map _filter x;
+        description = ''
+          Configures the remote read request's TLS settings.
+        '';
+      };
+      proxy_url = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          Optional proxy URL.
+        '';
+      };
+      queue_config = mkOption {
+        type = types.nullOr types.attrs;
+        default = null;
+        description = ''
+          Configures the queue used to read to remote storage.
+        '';
+      };
+    };
+  };
+
 in {
   options = {
     services.prometheus = {
 
-      enable = mkOption {
-        type = types.bool;
-        default = false;
-        description = ''
-          Enable the Prometheus monitoring daemon.
-        '';
-      };
+      enable = mkEnableOption "the Prometheus monitoring daemon";
 
       listenAddress = mkOption {
         type = types.str;
@@ -467,6 +711,25 @@ in {
           Alert manager HTTP API timeout (in seconds).
         '';
       };
+
+      remote_write = mkOption {
+        type = types.listOf promTypes.remote_write_config;
+        default = [];
+        apply = x: map _filter x;
+        description = ''
+          List of remote write configurations.
+        '';
+      };
+
+      remote_read = mkOption {
+        type = types.listOf promTypes.remote_read_config;
+        default = [];
+        apply = x: map _filter x;
+        description = ''
+          List of remote read configurations.
+        '';
+      };
+
     };
   };
 
