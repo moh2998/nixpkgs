@@ -263,9 +263,20 @@ in
               ${optionalString (cfg.rootPassword != null)
                 ''
                   # Change root password
-                  ${mysql}/bin/mysqladmin --no-defaults password "$(< ${cfg.rootPassword})"
+                  ${# For 8.0 we still use native password because there are
+                    # too many non 8.0 client libs out there, which cannot
+                    # connect otherwise.
+                    if versionAtLeast mysql.version "8.0"
+                    then ''
+                      (echo "ALTER USER 'root'@'localhost' "
+                       echo "IDENTIFIED WITH mysql_native_password "
+                       echo "BY '$(< ${cfg.rootPassword})';") |\
+                        ${mysql}/bin/mysql -u root -N
+                    ''
+                    else ''
+                    ${mysql}/bin/mysqladmin --no-defaults password "$(< ${cfg.rootPassword})"
+                  ''}
                 ''}
-
             rm /run/mysql_init
           fi
         '';  # */

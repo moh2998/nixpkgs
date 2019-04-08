@@ -39,6 +39,8 @@ let
     then pkgs.percona56
     else if config.flyingcircus.roles.mysql57.enable
     then pkgs.percona57
+    else if config.flyingcircus.roles.percona80.enable
+    then pkgs.percona80
     else null;
 
   enabled = package != null;
@@ -106,6 +108,10 @@ in
       };
     };
 
+    flyingcircus.roles.percona80 = {
+      enable = mkEnableOption "Enable the Flying Circus Percona 8.0 server role.";
+    };
+
 
   };
 
@@ -118,7 +124,15 @@ in
       package = package;
       rootPassword = root_password_file;
       dataDir = "/srv/mysql";
-      extraOptions = ''
+      extraOptions =
+        let
+          charset = if (versionAtLeast package.version "8.0")
+                    then "utf8mb4"
+                    else "utf8";
+          collation = if (versionAtLeast package.version "8.0")
+                      then "utf8mb4_unicode_ci"
+                      else "utf8_unicode_ci";
+        in ''
         [mysqld]
         default-storage-engine  = innodb
         skip-external-locking
@@ -135,11 +149,11 @@ in
         sysdate-is-now             = 1
         sql_mode                   = NO_ENGINE_SUBSTITUTION
 
-        init-connect               = 'SET NAMES utf8 COLLATE utf8_unicode_ci'
-        character-set-server       = utf8
-        collation-server           = utf8_unicode_ci
-        character_set_server       = utf8
-        collation_server           = utf8_unicode_ci
+        init-connect               = 'SET NAMES ${charset} COLLATE ${collation}'
+        character-set-server       = ${charset}
+        collation-server           = ${collation}
+        character_set_server       = ${charset}
+        collation_server           = ${collation}
 
         # Timeouteinstellung
         interactive_timeout        = 28800
@@ -155,9 +169,21 @@ in
         # myisam-recover           = FORCE
         thread_cache_size          = 8
 
-        query_cache_type           = 1
-        query_cache_min_res_unit   = 2k
-        query_cache_size           = 80M
+        ${# For 8.0 we still use native password because there are
+          # too many non 8.0 client libs out there, which cannot
+          # connect otherwise.
+          optionalString
+          (versionAtLeast package.version "8.0")
+          "default_authentication_plugin = mysql_native_password"}
+
+        ${# Query cache is gone in 8.0
+          # https://mysqlserverteam.com/mysql-8-0-retiring-support-for-the-query-cache/
+          optionalString
+          (versionOlder package.version "8.0")
+          ''query_cache_type           = 1
+            query_cache_min_res_unit   = 2k
+            query_cache_size           = 80M
+          ''}
 
         # * InnoDB
         innodb_buffer_pool_size         = ${toString (current_memory * 70 / 100)}M
@@ -278,12 +304,7 @@ in
 
     security.sudo.extraConfig = ''
       # MySQL sudo rules
-
-      Cmnd_Alias      MYSQL_RESTART = /run/current-system/sw/bin/systemctl restart mysql
-      Cmnd_Alias      CHECK_MYSQL = ${pkgs.sensu}/bin/check-mysql-alive.rb
-      %service        ALL=(root) MYSQL_RESTART
-      %sudo-srv       ALL=(root) MYSQL_RESTART
-      %sensuclient    ALL=(mysql) ALL
+      Cmnd_Alias      CHECK_MYSQL = ${pkgs.nagiosPluginsOfficial}/bin/check_mysql
       %sensuclient    ALL=(root) CHECK_MYSQL
     '';
 
@@ -304,7 +325,7 @@ in
         # sensu needs to be in the service class for accessing the root_password_file
         command = ''
           /var/setuid-wrappers/sudo -u root \
-          ${pkgs.sensu}/bin/check-mysql-alive.rb -d mysql -i /root/.my.cnf
+          ${pkgs.nagiosPluginsOfficial}/bin/check_mysql -d mysql -f /root/.my.cnf
         '';
       };
     };
