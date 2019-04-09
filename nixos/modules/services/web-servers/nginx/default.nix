@@ -643,6 +643,9 @@ in
       }
     ];
 
+    # FCIO: fixed config file location
+    environment.etc."current-config/nginx.conf".source = configFile;
+
     systemd.services.nginx = {
       description = "Nginx Web Server";
       after = [ "network.target" ];
