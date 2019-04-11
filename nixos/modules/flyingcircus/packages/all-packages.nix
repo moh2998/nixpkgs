@@ -167,6 +167,11 @@ in rec {
   fclogcheckhelper = pkgs.callPackage ./fclogcheckhelper { };
   fix-so-rpath = pkgs.callPackage ./fix-so-rpath {};
 
+  go = go_1_5;
+  go_1_5 = pkgs.callPackage ./go/1.5.nix {
+    inherit (darwin.apple_sdk.frameworks) Security;
+  };
+
   graylog = pkgs.callPackage ./graylog { };
   graylogPlugins = pkgs.recurseIntoAttrs (
       pkgs.callPackage graylog/plugins.nix { }
