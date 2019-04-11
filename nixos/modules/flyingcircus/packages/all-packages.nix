@@ -47,6 +47,7 @@ in rec {
   # === Imports from newer upstream versions ===
 
   inherit (pkgs_18_09)
+    atop
     bazaar
     chromedriver
     chromium
@@ -68,6 +69,7 @@ in rec {
     python36
     python36Packages
     qt4
+    shadow
     vim
     ;
 

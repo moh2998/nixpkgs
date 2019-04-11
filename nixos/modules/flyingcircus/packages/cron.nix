@@ -27,7 +27,13 @@ stdenv.mkDerivation {
     echo "#undef HAVE_SAVED_UIDS" >> externs.h
   '';
 
-  preInstall = "mkdir -p $out/bin $out/sbin $out/share/man/man1 $out/share/man/man5 $out/share/man/man8";
+  preInstall = ''
+    mkdir -p $out/bin $out/sbin $out/share/man/man1 $out/share/man/man5 \
+      $out/share/man/man8
+    # setuid programs will be handled in
+    # nixos/modules/services/scheduling/cron.nix
+    sed -i 's/-m [24]755/-m 0755/' Makefile
+  '';
 
   meta = {
     description = "Daemon for running commands at specific times (Vixie Cron)";
