@@ -246,7 +246,12 @@ let
   # old firewall configuration stays active and CHECK_IPTABLES alerts.
   atomicReload = writeShScript "firewall-atomic-reload" ''
     touch ${confMarker}
-    ${generateRules} ${startScript}
+    if [[ ! -e ${rulesDir}/iptables-save || ! -e ${rulesDir}/ip6tables-save || \
+          -n "$(find -L /etc/local/firewall -type f \
+                -newer ${rulesDir}/iptables-save)" ]]
+    then
+      ${generateRules} ${startScript}
+    fi
     iptables-restore ${rulesDir}/iptables-save
     ip6tables-restore ${rulesDir}/ip6tables-save
     rm -f ${confMarker}

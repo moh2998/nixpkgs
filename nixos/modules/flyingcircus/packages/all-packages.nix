@@ -47,6 +47,7 @@ in rec {
   # === Imports from newer upstream versions ===
 
   inherit (pkgs_18_09)
+    atop
     bazaar
     chromedriver
     chromium
@@ -113,11 +114,11 @@ in rec {
     ;
 
   cups = mergeOutputs [ "out" "lib" "dev" ] pkgs_18_09.cups;
-  libtiff = mergeOutputs [ "out" "bin" "dev" ] pkgs_18_03.libtiff;
-  libsndfile = mergeOutputs [ "out" "bin" "dev" ] pkgs_18_03.libsndfile;
-  libvorbis = mergeOutputs [ "out" "dev" ] pkgs_18_03.libvorbis;
-  libjpeg-turbo = mergeOutputs [ "out" "bin" "dev" ] pkgs_18_03.libjpeg;
   libjpeg = libjpeg-turbo;
+  libjpeg-turbo = mergeOutputs [ "out" "bin" "dev" ] pkgs_18_03.libjpeg;
+  libsndfile = mergeOutputs [ "out" "bin" "dev" ] pkgs_18_03.libsndfile;
+  libtiff = mergeOutputs [ "out" "bin" "dev" ] pkgs_18_03.libtiff;
+  libvorbis = mergeOutputs [ "out" "dev" ] pkgs_18_03.libvorbis;
 
   # === Own ports ===
 
@@ -164,6 +165,11 @@ in rec {
   fcuserscan = pkgs.callPackage ./fcuserscan.nix { };
   fclogcheckhelper = pkgs.callPackage ./fclogcheckhelper { };
   fix-so-rpath = pkgs.callPackage ./fix-so-rpath {};
+
+  go = go_1_5;
+  go_1_5 = pkgs.callPackage ./go/1.5.nix {
+    inherit (darwin.apple_sdk.frameworks) Security;
+  };
 
   graylog = pkgs.callPackage ./graylog { };
   graylogPlugins = pkgs.recurseIntoAttrs (
@@ -321,7 +327,9 @@ in rec {
     ruby = pkgs.ruby_2_1;
   };
 
+  shadow = pkgs.callPackage ./shadow {};
   subversion = subversion18;
+  sudo = pkgs.callPackage ./sudo.nix {};
 
   telegraf = pkgs.callPackage ./telegraf {
     inherit (pkgs_18_03) buildGoPackage fetchFromGitHub;
@@ -330,6 +338,7 @@ in rec {
   temporal_tables = pkgs.callPackage ./postgresql/temporal_tables { };
 
   uchiwa = pkgs.callPackage ./uchiwa { };
+  utillinux = pkgs.callPackage ./util-linux {};
 
   varnish =
     (pkgs.callPackage ../../../../pkgs/servers/varnish { }).overrideDerivation

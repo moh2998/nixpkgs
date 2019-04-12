@@ -11,7 +11,7 @@ let
   isStaging = !(attrByPath [ "parameters" "production" ] true cfg.enc);
 
   collectCmd = if cfg.agent.collect-garbage
-    then "nix-collect-garbage --delete-older-than 3d --max-freed 104857600"
+    then "nice nix-collect-garbage --delete-older-than 3d --max-freed 10485760"
     else "echo 'nix-collect-garbage disabled (feature switch)'";
 
   humanGid = toString config.ids.gids.users;
@@ -19,7 +19,6 @@ let
   log = "/var/log/fc-collect-garbage.log";
 
   script = ''
-    sleep $[ $RANDOM % 30 ]
     started=$(date +%s)
     failed=0
     while read user home; do
