@@ -69,7 +69,6 @@ in rec {
     python36
     python36Packages
     qt4
-    shadow
     vim
     ;
 
@@ -328,6 +327,7 @@ in rec {
     ruby = pkgs.ruby_2_1;
   };
 
+  shadow = pkgs.callPackage ./shadow {};
   subversion = subversion18;
   sudo = pkgs.callPackage ./sudo.nix {};
 
