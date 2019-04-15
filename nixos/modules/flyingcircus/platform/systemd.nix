@@ -26,7 +26,7 @@ in {
     systemd.extraConfig = ''
       DefaultRestartSec=3
       DefaultStartLimitInterval=60
-      DefaultStartLimitBurst=3
+      DefaultStartLimitBurst=5
     '';
 
     systemd.units =
