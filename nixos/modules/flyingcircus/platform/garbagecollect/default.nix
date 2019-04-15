@@ -113,7 +113,7 @@ in {
         description = "Timer for fc-collect-garbage";
         wantedBy = [ "timers.target" ];
         timerConfig = {
-          OnStartupSec = "49m";
+          OnActiveSec = "2h 30m";
           OnUnitInactiveSec = "1d";
           AccuracySec = "1h";
         };
