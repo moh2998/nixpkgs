@@ -145,6 +145,8 @@ in
       serviceConfig = {
         LimitMEMLOCK = "infinity";
         Restart = "always";
+        StartLimitInterval=480;
+        StartLimitBurst=3;
       };
       preStart = mkAfter ''
         # Install scripts

@@ -246,6 +246,7 @@ in {
     systemd.services.sensu-client = {
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
+      stopIfChanged = false;
 
       path = [
         bash

@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, libiconv, xz }:
+{ stdenv, fetchurl, libiconv, xz, bison, automake115x, autoconf }:
 
 stdenv.mkDerivation (rec {
   name = "gettext-0.19.5.1";
@@ -7,6 +7,8 @@ stdenv.mkDerivation (rec {
     url = "mirror://gnu/gettext/${name}.tar.gz";
     sha256 = "0cbp498ckjwj7qr8b9pmkry8hkhldgkvg5yix8hi9c8z1hxxb651";
   };
+
+  patches = [ ./CVE-2018-18751.patch ];
 
   outputs = [ "out" "doc" ];
 
@@ -41,7 +43,7 @@ stdenv.mkDerivation (rec {
     sed -i -e "s/\(am_libgettextlib_la_OBJECTS = \)error.lo/\\1/" gettext-tools/gnulib-lib/Makefile.in
   '';
 
-  buildInputs = [ xz ] ++ stdenv.lib.optional (!stdenv.isLinux) libiconv;
+  buildInputs = [ xz bison automake115x autoconf ] ++ stdenv.lib.optional (!stdenv.isLinux) libiconv;
 
   enableParallelBuilding = true;
 

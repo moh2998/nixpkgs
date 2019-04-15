@@ -118,7 +118,7 @@ in {
         description = "Timer for fc-manage";
         wantedBy = [ "timers.target" ];
         timerConfig = {
-          OnStartupSec = "10s";
+          OnActiveSec = "5m";
           OnUnitInactiveSec = "10m";
           # Not yet supported by our systemd version.
           # RandomSec = "3m";
