@@ -85,6 +85,7 @@ in
       haproxy_ = "${pkgs.haproxy}/bin/haproxy -f /etc/current-config/haproxy.cfg -p /run/haproxy.pid -Ws";
       verifyConfig = "${pkgs.haproxy}/bin/haproxy -c -q -f /etc/current-config/haproxy.cfg";
       in {
+      after = [ "network-interfaces.target" ];
       reloadIfChanged = true;
       restartTriggers = [ haproxyCfg ];
       reload = ''

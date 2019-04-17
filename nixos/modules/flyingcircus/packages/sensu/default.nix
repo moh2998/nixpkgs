@@ -3,8 +3,7 @@
 bundlerEnv {
   inherit ruby;
 
-  name = "sensu-0.22.1";
-
+  name = "sensu-0.27.1";
   gemfile = ./Gemfile;
   lockfile = ./Gemfile.lock;
   gemset = ./gemset.nix;
