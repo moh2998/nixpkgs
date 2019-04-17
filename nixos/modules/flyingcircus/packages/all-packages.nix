@@ -33,8 +33,8 @@ let
   pkgs_18_03_src = (import <nixpkgs> {}).fetchFromGitHub {
     owner = "NixOS";
     repo = "nixpkgs";
-    rev = "b551f89";
-    sha256 = "0p9f7mpd5cpy4mf8j2dq78mqbvwfcdzmhp95hn3lklmrpf8wam2j";
+    rev = "c8c521f";
+    sha256 = "1qzv8h930p1gqfxlnidlpm6iwqg1g27vhxlphb4mkhk8lr74whww";
   };
   pkgs_18_03 = import pkgs_18_03_src {};
 
