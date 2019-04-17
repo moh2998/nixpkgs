@@ -55,10 +55,13 @@ in
       ${localConfig}
     '';
 
-    systemd.services.httpd.preStart = ''
-      install -d -o ${config.services.httpd.user} -g service -m 02775 /etc/local/apache
-      install -d -o root -g service -m 02755 ${config.services.httpd.logDir}
-    '';
+    systemd.services.httpd = {
+      after = [ "network-interfaces.target" ];
+      preStart = ''
+        install -d -o ${config.services.httpd.user} -g service -m 02775 /etc/local/apache
+        install -d -o root -g service -m 02755 ${config.services.httpd.logDir}
+      '';
+    };
 
     services.logrotate.config = ''
         /var/log/httpd/*access*log

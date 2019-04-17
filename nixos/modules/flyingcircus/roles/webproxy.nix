@@ -55,7 +55,7 @@ in
     services.varnish.stateDir = "/var/spool/varnish/${config.networking.hostName}";
     systemd.services.varnish = {
       # XXX: needs to be migrated to upstream varnish service
-      after = [ "network.target" ];
+      after = [ "network.target" "network-interfaces.target" ];
       path = [ pkgs.varnish pkgs.procps pkgs.gawk ];
       preStart = lib.mkAfter ''
         install -d -o ${toString config.ids.uids.varnish} -g service -m 02775 /etc/local/varnish
