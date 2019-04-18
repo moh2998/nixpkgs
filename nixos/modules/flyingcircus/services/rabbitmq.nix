@@ -33,8 +33,9 @@ in {
   };
 
   config = mkIf cfg.enable {
-    systemd.services.rabbitmq.environment = {
-        RABBITMQ_PLUGINS_DIR = plugins;
+    systemd.services.rabbitmq = {
+      environment.RABBITMQ_PLUGINS_DIR = plugins;
+      serviceConfig.LimitNOFILE = 65536;
     };
     systemd.services.rabbitmq.path = [ pkgs.glibc ];
   };
