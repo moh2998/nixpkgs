@@ -220,6 +220,10 @@ in
     services.nginx.config = "";
     services.nginx.appendConfig = baseConfig;
 
+    systemd.services.nginx = {
+      after = [ "network-interfaces.target" ];
+    };
+
     # XXX only on FE!
     networking.firewall.allowedTCPPorts = [ 80 443 ];
 
