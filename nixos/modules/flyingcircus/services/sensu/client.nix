@@ -245,7 +245,7 @@ in {
 
     systemd.services.sensu-client = {
       wantedBy = [ "multi-user.target" ];
-      after = [ "network.target" ];
+      after = [ "network.target" "network-interfaces.target" ];
       stopIfChanged = false;
 
       path = [
