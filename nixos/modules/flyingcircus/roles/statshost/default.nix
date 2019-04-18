@@ -633,6 +633,11 @@ in
         };
       };
 
+      # must be present before fc-grafana-load-dashboards starts
+      systemd.tmpfiles.rules = [
+        "d ${config.services.grafana.dataDir} 0755 grafana"
+      ];
+
     })
 
     # collectd proxy
