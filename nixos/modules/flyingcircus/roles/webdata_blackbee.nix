@@ -5,7 +5,6 @@ let
   fclib = import ../lib;
   cfg = config.flyingcircus.roles.webdata_blackbee;
 
-
   firewallTrustedSSH = [
     # VPN prod
     "172.22.49.50"
@@ -33,7 +32,6 @@ let
 
 in
 {
-
   options = {
 
     flyingcircus.roles.webdata_blackbee = {
@@ -48,7 +46,6 @@ in
 
   };
 
-
   config = mkIf cfg.enable {
 
     environment.etc.blackbee.source = "/srv/s-blackbee/etc";
@@ -59,6 +56,40 @@ in
     '';
 
     networking.extraHosts = additional_hosts;
+
+    systemd.services."network-external-routing-ionos" = rec {
+      description = "Custom routing rules for external networks";
+      after = [ "network-routing-ethsrv.service" "firewall.service" ];
+      requires = after;
+      wantedBy = [ "multi-user.target" ];
+      bindsTo = [ "sys-subsystem-net-devices-ethsrv.device" ];
+      path = [ pkgs.gawk pkgs.iproute pkgs.glibc pkgs.iptables ];
+
+      serviceConfig =
+        let
+          routes = ["10.0.0.0/24" "10.10.10.0/24" "10.242.2.0/24" ];
+          gwHost = "blackbee01";
+        in {
+          Type = "oneshot";
+          ExecStart = pkgs.writeScript "network-external-routing-start" ''
+            #! ${pkgs.stdenv.shell} -e
+            echo "Adding routes via external network gateway ${gwHost}"
+            gw4=$(getent ahostsv4 ${gwHost} | awk 'NR==1 {print $1}')
+            ${lib.concatMapStringsSep "\n"
+              (route: "ip -4 route add ${route} via $gw4 dev ethsrv")
+              routes}
+          '';
+          ExecStop = pkgs.writeScript "network-external-routing-stop" ''
+            #! ${pkgs.stdenv.shell}
+            echo "Removing routes via external network gateway ${gwHost}"
+            gw4=$(getent ahostsv4 ${gwHost} | awk 'NR==1 {print $1}')
+            ${concatMapStringsSep "\n"
+              (route: "ip -4 route del ${route} via $gw4 dev ethsrv")
+              routes}
+          '';
+          RemainAfterExit = true;
+        };
+      };
 
     environment.systemPackages = [
       pkgs.htop
