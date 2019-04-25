@@ -90,7 +90,10 @@ in {
         restartIfChanged = false;
         wants = [ "network.target" ];
         after = wants;
-        serviceConfig.Type = "oneshot";
+        serviceConfig = {
+          Type = "oneshot";
+          KillMode = "none";
+        };
         path = with pkgs; [
           fcmanage
           xfsprogs
