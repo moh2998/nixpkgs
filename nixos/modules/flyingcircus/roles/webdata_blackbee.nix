@@ -30,6 +30,8 @@ let
     then readFile /srv/s-blackbee/hosts
     else "";
 
+  routes = ["10.0.0.0/24" "10.10.10.0/24" "10.242.2.0/24" ];
+
 in
 {
   options = {
@@ -67,7 +69,6 @@ in
 
       serviceConfig =
         let
-          routes = ["10.0.0.0/24" "10.10.10.0/24" "10.242.2.0/24" ];
           gwHost = "blackbee01";
         in {
           Type = "oneshot";
@@ -128,6 +129,11 @@ in
       ip46tables -D nixos-fw -p tcp --dport ssh -j nixos-fw-accept || true
       # Allow ssh from trusted nets/hosts
       ${allowed}
+
+      # Allow ionos routes
+      ${lib.concatMapStringsSep "\n"
+        (route: "iptables -A nixos-fw -s ${route} -j nixos-fw-accept")
+        routes}
     '';
 
   };
