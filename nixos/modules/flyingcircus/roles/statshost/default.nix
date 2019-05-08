@@ -40,7 +40,6 @@ let
     then fromJSON (readFile (customRelabelJSON filename))
     else [];
 
-
   prometheusMetricRelabel =
     cfgStatsGlobal.prometheusMetricRelabel ++ customRelabelConfig;
 
@@ -341,7 +340,7 @@ in
         description = "Timer for updating relayed targets";
         wantedBy = [ "timers.target" ];
         timerConfig = {
-          Unit = "fc-prometheus-update-relayed-nodes";
+          Unit = "fc-prometheus-update-relayed-nodes.service";
           OnUnitActiveSec = "11m";
           # Not yet supported by our systemd version.
           # RandomSec = "3m";
