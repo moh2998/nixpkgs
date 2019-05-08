@@ -18,6 +18,7 @@ let
 
   # pick a suitable DNS name for client config
   domain = config.networking.domain;
+  location = lib.attrByPath [ "parameters" "location" ] "standalone" cfg.enc;
   defaultFrontendName =
     if feReverses != {}
     then fclib.normalizeDomain domain (head (attrValues feReverses))
