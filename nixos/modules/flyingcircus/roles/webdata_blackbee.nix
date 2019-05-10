@@ -136,5 +136,7 @@ in
         routes}
     '';
 
+    # Production VMs are being updated with maintenance
+    flyingcircus.agent.with-maintenance = config.flyingcircus.enc.parameters.production;
   };
 }
