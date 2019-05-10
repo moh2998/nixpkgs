@@ -30,7 +30,8 @@ let
     then readFile /srv/s-blackbee/hosts
     else "";
 
-  routes = ["10.0.0.0/24" "10.10.10.0/24" "10.242.2.0/24" ];
+  routes = [ "10.0.0.0/24" "10.10.10.0/24" "10.242.2.0/24" ];
+  gwHost = "172.22.49.50";
 
 in
 {
@@ -68,24 +69,18 @@ in
       path = [ pkgs.gawk pkgs.iproute pkgs.glibc pkgs.iptables ];
 
       serviceConfig =
-        let
-          gwHost = "blackbee01";
-        in {
+        {
           Type = "oneshot";
           ExecStart = pkgs.writeScript "network-external-routing-start" ''
             #! ${pkgs.stdenv.shell} -e
-            echo "Adding routes via external network gateway ${gwHost}"
-            gw4=$(getent ahostsv4 ${gwHost} | awk 'NR==1 {print $1}')
             ${lib.concatMapStringsSep "\n"
-              (route: "ip -4 route add ${route} via $gw4 dev ethsrv")
+              (route: "ip -4 route add ${route} via ${gwHost} dev ethsrv")
               routes}
           '';
           ExecStop = pkgs.writeScript "network-external-routing-stop" ''
             #! ${pkgs.stdenv.shell}
-            echo "Removing routes via external network gateway ${gwHost}"
-            gw4=$(getent ahostsv4 ${gwHost} | awk 'NR==1 {print $1}')
             ${concatMapStringsSep "\n"
-              (route: "ip -4 route del ${route} via $gw4 dev ethsrv")
+              (route: "ip -4 route del ${route} via ${gwHost} dev ethsrv")
               routes}
           '';
           RemainAfterExit = true;
@@ -139,5 +134,8 @@ in
     # Policy routing doesn't work with the routing via VPN. But everything
     # works without policy routing. So disable it.
     flyingcircus.network.policyRouting.enable = lib.mkForce false;
+
+    # Production VMs are being updated with maintenance
+    flyingcircus.agent.with-maintenance = config.flyingcircus.enc.parameters.production;
   };
 }
