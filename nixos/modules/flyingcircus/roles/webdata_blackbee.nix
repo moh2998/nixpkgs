@@ -131,6 +131,10 @@ in
         routes}
     '';
 
+    # Policy routing doesn't work with the routing via VPN. But everything
+    # works without policy routing. So disable it.
+    flyingcircus.network.policyRouting.enable = lib.mkForce false;
+
     # Production VMs are being updated with maintenance
     flyingcircus.agent.with-maintenance = config.flyingcircus.enc.parameters.production;
   };
