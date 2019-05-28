@@ -77,10 +77,6 @@ rec {
     inherit (darwin) Security;
   };
 
-  gitFastExport = import ./fast-export {
-    inherit fetchgit stdenv mercurial coreutils git makeWrapper subversion;
-  };
-
   git2cl = import ./git2cl {
     inherit fetchgit stdenv perl;
   };
@@ -95,8 +91,6 @@ rec {
   darcsToGit = callPackage ./darcs-to-git { };
 
   gitflow = callPackage ./gitflow { };
-
-  git-remote-hg = callPackage ./git-remote-hg { };
 
   gitRemoteGcrypt = callPackage ./git-remote-gcrypt { };
 

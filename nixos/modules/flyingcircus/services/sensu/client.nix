@@ -86,6 +86,22 @@ let
     };
   };
 
+  sensu-check-env = with pkgs; buildEnv {
+    name = "sensu-check-env";
+    paths = [
+      bash
+      check-journal
+      coreutils
+      fcsensusyntax
+      glibc
+      lm_sensors
+      nagiosPluginsOfficial
+      nix
+      openssl
+      sensu
+      sysstat
+    ];
+  };
 
 in {
 
@@ -247,18 +263,10 @@ in {
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" "network-interfaces.target" ];
       stopIfChanged = false;
-
-      path = [
-        bash
-        check-journal
-        coreutils
-        fcsensusyntax
-        glibc
-        lm_sensors
-        nagiosPluginsOfficial
-        sensu
-        sysstat
-      ];
+      # Sensu check scripts inherit the PATH of sensu-client by default.
+      # We provide common external dependencies in sensu-check-env. 
+      # Checks can define their own PATH in a wrapper to include other dependencies.
+      path = [ sensu-check-env ];
       serviceConfig = {
         User = "sensuclient";
         ExecStart = ''

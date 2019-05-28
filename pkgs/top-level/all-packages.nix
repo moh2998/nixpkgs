@@ -2976,8 +2976,6 @@ let
 
   screen = callPackage ../tools/misc/screen { };
 
-  screen-message = callPackage ../tools/X11/screen-message { };
-
   screencloud = callPackage ../applications/graphics/screencloud {
     quazip = quazip.override { qt = qt4; };
   };
@@ -13681,7 +13679,6 @@ let
     pygtk = pyGtkGlade;
   };
 
-  zotero = callPackage ../applications/office/zotero {};
 
   zynaddsubfx = callPackage ../applications/audio/zynaddsubfx { };
 
