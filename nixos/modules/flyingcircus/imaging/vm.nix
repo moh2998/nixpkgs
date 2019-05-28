@@ -18,6 +18,9 @@ with lib;
   # so we just start with the fixed known environment here.
   boot.loader.grub.device = mkOverride 10 "/dev/vda";
 
+  # telegraf service doesn't work on initial boot and is unneeded, disable it
+  services.telegraf.enable = mkForce false;
+
   system.build.flyingcircusVMImage =
     let
       qemuImg = "${pkgs.vmTools.qemu}/bin/qemu-img";
