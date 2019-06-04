@@ -11,6 +11,7 @@
   inherit (import ./elasticsearch.nix { inherit system hydraJob; })
     elasticsearch5 elasticsearch6;
 
+  fcmanage = hydraJob (import ./fcmanage.nix { inherit system; });
   firewall = hydraJob (import ./firewall/atomic.nix { inherit system; });
 
   graylog = hydraJob (import ./graylog.nix { inherit system; });

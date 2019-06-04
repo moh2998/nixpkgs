@@ -135,7 +135,5 @@ in
     # works without policy routing. So disable it.
     flyingcircus.network.policyRouting.enable = lib.mkForce false;
 
-    # Production VMs are being updated with maintenance
-    flyingcircus.agent.with-maintenance = config.flyingcircus.enc.parameters.production;
   };
 }
