@@ -48,4 +48,5 @@ in
   mysql_5_5 = testFactory "mysql55";
   mysql_5_6 = testFactory "mysql56";
   mysql_5_7 = testFactory "mysql57";
+  percona_8_0 = testFactory "percona80";
 }

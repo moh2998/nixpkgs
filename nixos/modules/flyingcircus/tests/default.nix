@@ -33,7 +33,7 @@
     nodejs_6 nodejs_7 nodejs_8 nodejs_9;
 
   inherit (import ./mysql.nix { inherit system hydraJob; })
-    mysql_5_5 mysql_5_6 mysql_5_7;
+    mysql_5_5 mysql_5_6 mysql_5_7 percona_8_0;
 
   oraclejava = hydraJob (import ./oraclejava.nix { inherit system; });
 

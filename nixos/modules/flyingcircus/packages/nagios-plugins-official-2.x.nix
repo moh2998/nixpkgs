@@ -4,9 +4,14 @@
   ../../../../pkgs/servers/monitoring/nagios/plugins/official-2.x.nix { })
 .overrideDerivation
   (old: {
-    buildInputs = [ pkgs.openssh pkgs.perl ];
+    buildInputs = [ pkgs.openssh pkgs.perl pkgs.mariadb ];
     nativeBuildInputs = [ pkgs.openldap ];
     preConfigure= ''
+      sed -i -e 's#mysql.h#mysql/mysql.h#' \
+             -e 's#mysqld_error.h#mysql/mysqld_error.h#' \
+             -e 's#errmsg.h#mysql/errmsg.h#' \
+             plugins/check_mysql.c plugins/check_mysql_query.c
+
       configureFlagsArray=(
         --with-openssl=${pkgs.openssl}
         --with-ping-command='/var/setuid-wrappers/ping -n -w %d -c %d %s'
