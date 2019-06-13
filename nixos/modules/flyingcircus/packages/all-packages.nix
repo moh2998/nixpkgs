@@ -255,10 +255,11 @@ in rec {
 
   pcre = pkgs.callPackage ./pcre.nix { };
   pcre-cpp = pcre.override { variant = "cpp"; };
-  percona = percona57;
-  percona57 = pkgs.callPackage ./percona/5.7.nix { boost = boost159; };
-  percona56 = pkgs.callPackage ./percona/5.6.nix { boost = boost159; };
+  percona = percona80;
   percona-toolkit = pkgs.callPackage ./percona/toolkit.nix { };
+  percona56 = pkgs.callPackage ./percona/5.6.nix { boost = boost159; };
+  percona57 = pkgs.callPackage ./percona/5.7.nix { boost = boost159; };
+  percona80 = pkgs_18_09.callPackage ./percona/8.0.nix { boost = pkgs_18_09.boost168; };
 
   postgis = pkgs.callPackage ./postgis { };
   inherit (pkgs.callPackages ./postgresql { })
@@ -350,7 +351,10 @@ in rec {
   virtualboxGuestAdditions = pkgs_18_03.callPackage "${pkgs_18_03_src}/pkgs/applications/virtualization/virtualbox/guest-additions" { kernel = linux_4_4; };
   vulnix = pkgs.callPackage ./vulnix { };
 
-  xtrabackup = pkgs.callPackage ./percona/xtrabackup.nix { };
+  xtrabackup = pkgs_18_09.callPackage ./percona/xtrabackup.nix {
+    inherit percona;
+    boost = pkgs_18_09.boost168;
+  };
 
   yarn = pkgs.callPackage ./yarn.nix { nodejs = nodejs7; };
 

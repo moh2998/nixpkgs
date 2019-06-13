@@ -11,6 +11,7 @@
   inherit (import ./elasticsearch.nix { inherit system hydraJob; })
     elasticsearch5 elasticsearch6;
 
+  fcmanage = hydraJob (import ./fcmanage.nix { inherit system; });
   firewall = hydraJob (import ./firewall/atomic.nix { inherit system; });
 
   graylog = hydraJob (import ./graylog.nix { inherit system; });
@@ -32,7 +33,7 @@
     nodejs_6 nodejs_7 nodejs_8 nodejs_9;
 
   inherit (import ./mysql.nix { inherit system hydraJob; })
-    mysql_5_5 mysql_5_6 mysql_5_7;
+    mysql_5_5 mysql_5_6 mysql_5_7 percona_8_0;
 
   oraclejava = hydraJob (import ./oraclejava.nix { inherit system; });
 

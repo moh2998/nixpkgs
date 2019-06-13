@@ -4,11 +4,11 @@
 }:
 
 pkgs.buildPerlPackage rec {
-  name = "innotop-1.10.0";
+  name = "innotop-1.12.0";
   src = fetchgit {
     url = "https://github.com/innotop/innotop.git";
-    rev = "96010a3814e4dfc82b2eccfea004c46057a5545d";
-    sha256 = "0svi0fqr09vzgd8r9hfr89zc9vnz56p343zgmm5fndn0kbhxgiir";
+    rev = "2fa43e316893b208ff5ce0375e5c2d62287ec4d5";
+    sha256 = "0l284mmjzkadb17yrj9avyhbh5dqgdx3f5kj0yldlid28n1mx0kd";
   };
 
   patches = [ ./innotop.patch ];

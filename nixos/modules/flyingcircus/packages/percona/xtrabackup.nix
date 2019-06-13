@@ -1,16 +1,17 @@
-{ stdenv, fetchurl, pkgs, ... }:
+{ stdenv, fetchurl, pkgs, boost, percona, ... }:
 
 stdenv.mkDerivation rec {
   name = "xtrabackup-${version}";
-  version = "2.3.4";
+  version = "8.0.5";
 
   src = fetchurl {
-    url = "https://www.percona.com/downloads/XtraBackup/Percona-XtraBackup-2.3.4/source/tarball/percona-xtrabackup-${version}.tar.gz";
-    md5 = "89f2a8196c79b00b4f4ed3b609891bfd";
+    url = "https://www.percona.com/downloads/Percona-XtraBackup-8.0/Percona-XtraBackup-${version}/source/tarball/percona-xtrabackup-${version}.tar.gz";
+    sha256 = "10syhg6a753zymk04yvn8yn7d0wblqxnrlkn3nxhxcmhshkm35qc";
   };
 
   buildInputs = with pkgs; [
      bison
+     boost
      cmake
      curl
      libaio
@@ -28,6 +29,20 @@ stdenv.mkDerivation rec {
     "-DGCRYPT_LIB_PATH=${pkgs.libgcrypt}/lib:${pkgs.libgpgerror}/lib"
     "-DWITH_MAN_PAGES=OFF"
   ];
+
+  prePatch = ''
+    # Disable ABI check. See case #108154
+    sed -i "s/SET(RUN_ABI_CHECK 1)/SET(RUN_ABI_CHECK 0)/" cmake/abi_check.cmake
+
+  '';
+
+  preBuild = ''
+    export LD_LIBRARY_PATH=$(pwd)/library_output_directory
+  '';
+
+  postInstall = ''
+    chmod g-w $out
+  '';
 
   meta = {
     homepage = https://www.percona.com/;
