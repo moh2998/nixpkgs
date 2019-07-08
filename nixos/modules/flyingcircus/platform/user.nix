@@ -140,6 +140,10 @@ in
       Defaults set_home,!authenticate,!mail_no_user
       Defaults lecture = never
 
+      # This ensures that a password is needed for users in the wheel group.
+      # Overrides NixOS rule above.
+      %wheel ALL=(ALL) PASSWD: ALL
+
       # Allow unrestricted access to super admins
       %admins ALL=(ALL) PASSWD: ALL
 
