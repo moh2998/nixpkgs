@@ -643,9 +643,6 @@ in
       }
     ];
 
-    # FCIO: fixed config file location
-    environment.etc."current-config/nginx.conf".source = configFile;
-
     systemd.services.nginx = {
       description = "Nginx Web Server";
       after = [ "network.target" ];
@@ -660,30 +657,34 @@ in
         ln -sf ${cfg.package} /run/nginx/package
       '';
       reload = ''
+        echo "Reload triggered, checking config file..."
         # Check if the new config is valid
         ${cfg.package}/bin/nginx -t -c ${configFile} -p ${cfg.stateDir}
 
         # Check if the package changed
-        if [[ `readlink /run/nginx/package` != ${cfg.package} ]]; then
+
+        if [[ $(readlink /run/nginx/package) != ${cfg.package} ]]; then
           # If it changed, we need to restart nginx. So we kill nginx
           # gracefully. We can't send a restart to systemd while in the
           # reload script. Nginx will be restarted by systemd automatically.
+          echo "Nginx package changed, gracefully quitting so systemd can restart it"
           ${pkgs.coreutils}/bin/kill -QUIT $MAINPID
-          exit 0
+        else
+          # We only need to change the configuration, so update it and reload nginx
+          echo "Restart not needed, reload now"
+          ln -sf ${configFile} /run/nginx/config
+          ${pkgs.coreutils}/bin/kill -HUP $MAINPID
         fi
-
-        # We only need to change the configuration, so update it and reload nginx
-        ln -sf ${configFile} /run/nginx/config
-        ${pkgs.coreutils}/bin/kill -HUP $MAINPID
       '';
-      restartTriggers = [ configFile ];
       reloadIfChanged = true;
       serviceConfig = {
         ExecStart = "${cfg.package}/bin/nginx -c /run/nginx/config -p ${cfg.stateDir}";
         Restart = "always";
-        RestartSec = "1s";
-        StartLimitInterval = "1min";
         RuntimeDirectory = "nginx";
+        # X- options are ignored by systemd.
+        # To show the last running config, use:
+        # cat `systemctl cat nginx | grep "X-ConfigFile" | cut -d= -f2`
+        X-ConfigFile = configFile;
       };
     };
 
