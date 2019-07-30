@@ -63,10 +63,14 @@ import ./make-test.nix ({ pkgs, ...} : {
     $webserver->waitForOpenPort("80");
     $webserver->succeed("[[ `curl http://localhost/` == \"new-content\" ]]");
 
-    $webserver->fail("${webserver_invalid}/bin/switch-to-configuration test");
+    # activation should not fail, but display a warning
+    $webserver->succeed("${webserver_invalid}/bin/switch-to-configuration test | grep 'Nginx config is invalid'");
 
+    # nginx should still be running
     $webserver->waitForUnit("nginx");
     $webserver->waitForOpenPort("80");
+
+    # config should stay the same
     $webserver->succeed("[[ `curl http://localhost/` == \"new-content\" ]]");
   '';
 })

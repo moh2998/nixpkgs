@@ -296,6 +296,8 @@ let
       ${user}:{PLAIN}${password}
     '') authDef)
   );
+
+  checkConfigCmd = "${cfg.package}/bin/nginx -t -c ${configFile} -p ${cfg.stateDir}";
 in
 
 {
@@ -659,7 +661,15 @@ in
       reload = ''
         echo "Reload triggered, checking config file..."
         # Check if the new config is valid
-        ${cfg.package}/bin/nginx -t -c ${configFile} -p ${cfg.stateDir}
+        ${checkConfigCmd} || rc=$?
+
+        if [[ -n $rc ]]; then
+          echo Error: Not restarting / reloading because of config errors.
+          echo New configuration not activated!
+          # We must use 0 as exit code, otherwise systemd would kill the nginx process.
+          # This is a bug in systemd: https://github.com/systemd/systemd/issues/11238
+          exit 0
+        fi
 
         # Check if the package changed
 
@@ -687,6 +697,15 @@ in
         X-ConfigFile = configFile;
       };
     };
+
+    system.activationScripts.nginx-reload-check = lib.stringAfter [ "resolvconf" ] ''
+      nginx_check_msg=$(${checkConfigCmd} 2>&1) || rc=$?
+      if [[ -n $rc ]]; then
+        printf "\033[0;31mWarning: \033[0mNginx config is invalid at this point:\n$nginx_check_msg\n"
+        echo Reload may still work if missing Let\'s Encrypt SSL certs are the reason, for example.
+        echo Please check the output of journalctl -eu nginx
+      fi
+    '';
 
     security.acme.certs = filterAttrs (n: v: v != {}) (
       let
