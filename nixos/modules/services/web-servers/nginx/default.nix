@@ -695,6 +695,9 @@ in
         # To show the last running config, use:
         # cat `systemctl cat nginx | grep "X-ConfigFile" | cut -d= -f2`
         X-ConfigFile = configFile;
+        # To check the current config file:
+        # `systemctl cat nginx | grep "X-CheckConfigCmd" | cut -d= -f2`
+        X-CheckConfigCmd = checkConfigCmd;
       };
     };
 
