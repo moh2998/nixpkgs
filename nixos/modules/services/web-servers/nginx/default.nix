@@ -296,6 +296,8 @@ let
       ${user}:{PLAIN}${password}
     '') authDef)
   );
+
+  checkConfigCmd = "${cfg.package}/bin/nginx -t -c ${configFile} -p ${cfg.stateDir}";
 in
 
 {
@@ -643,27 +645,70 @@ in
       }
     ];
 
-    # FCIO: fixed config file location
-    environment.etc."current-config/nginx.conf".source = configFile;
-
     systemd.services.nginx = {
       description = "Nginx Web Server";
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
-      stopIfChanged = false;
       preStart =
         ''
         ${cfg.preStart}
-        ${cfg.package}/bin/nginx -c ${configFile} -p ${cfg.stateDir} -t
-        '';
+        mkdir -p ${cfg.stateDir}/logs
+        chmod 700 ${cfg.stateDir}
+        chown -R ${cfg.user}:${cfg.group} ${cfg.stateDir}
+        ln -sf ${configFile} /run/nginx/config
+        ln -sf ${cfg.package} /run/nginx/package
+      '';
+      reload = ''
+        echo "Reload triggered, checking config file..."
+        # Check if the new config is valid
+        ${checkConfigCmd} || rc=$?
+
+        if [[ -n $rc ]]; then
+          echo Error: Not restarting / reloading because of config errors.
+          echo New configuration not activated!
+          # We must use 0 as exit code, otherwise systemd would kill the nginx process.
+          # This is a bug in systemd: https://github.com/systemd/systemd/issues/11238
+          exit 0
+        fi
+
+        # Check if the package changed
+
+        if [[ $(readlink /run/nginx/package) != ${cfg.package} ]]; then
+          # If it changed, we need to restart nginx. So we kill nginx
+          # gracefully. We can't send a restart to systemd while in the
+          # reload script. Nginx will be restarted by systemd automatically.
+          echo "Nginx package changed, gracefully quitting so systemd can restart it"
+          ${pkgs.coreutils}/bin/kill -QUIT $MAINPID
+        else
+          # We only need to change the configuration, so update it and reload nginx
+          echo "Restart not needed, reload now"
+          ln -sf ${configFile} /run/nginx/config
+          ${pkgs.coreutils}/bin/kill -HUP $MAINPID
+        fi
+      '';
+      reloadIfChanged = true;
       serviceConfig = {
-        ExecStart = "${cfg.package}/bin/nginx -c ${configFile} -p ${cfg.stateDir}";
-        ExecReload = "${pkgs.coreutils}/bin/kill -HUP $MAINPID";
+        ExecStart = "${cfg.package}/bin/nginx -c /run/nginx/config -p ${cfg.stateDir}";
         Restart = "always";
-        RestartSec = "10s";
-        StartLimitInterval = "1min";
+        RuntimeDirectory = "nginx";
+        # X- options are ignored by systemd.
+        # To show the last running config, use:
+        # cat `systemctl cat nginx | grep "X-ConfigFile" | cut -d= -f2`
+        X-ConfigFile = configFile;
+        # To check the current config file:
+        # `systemctl cat nginx | grep "X-CheckConfigCmd" | cut -d= -f2`
+        X-CheckConfigCmd = checkConfigCmd;
       };
     };
+
+    system.activationScripts.nginx-reload-check = lib.stringAfter [ "resolvconf" ] ''
+      nginx_check_msg=$(${checkConfigCmd} 2>&1) || rc=$?
+      if [[ -n $rc ]]; then
+        printf "\033[0;31mWarning: \033[0mNginx config is invalid at this point:\n$nginx_check_msg\n"
+        echo Reload may still work if missing Let\'s Encrypt SSL certs are the reason, for example.
+        echo Please check the output of journalctl -eu nginx
+      fi
+    '';
 
     security.acme.certs = filterAttrs (n: v: v != {}) (
       let
