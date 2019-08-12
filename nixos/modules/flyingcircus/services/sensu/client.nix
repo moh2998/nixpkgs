@@ -257,6 +257,7 @@ in {
 
        %sensuclient ALL=(root) MULTIPING
        %sensuclient ALL=(root) CHECK_DISK
+       %sensuclient ALL=(%service) ALL
    '';
 
     systemd.services.sensu-client = {
