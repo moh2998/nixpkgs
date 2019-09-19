@@ -279,6 +279,12 @@ in
       https://flyingcircus.io/doc/guide/platform_nixos/mysql.html.
     '';
 
+    systemd.services.mysql = {
+      serviceConfig = {
+          Restart = "always";
+        };
+    };
+
     systemd.services.mysql-maintenance = {
       description = "Timed MySQL maintenance tasks";
       after = [ "mysql.service" ];
