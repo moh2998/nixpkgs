@@ -69,9 +69,9 @@ let
       plugins = mkOption {
         type = types.listOf (types.enum [
           "cert.der" "cert.pem" "chain.pem" "external.sh"
-          "fullchain.pem" "full.pem" "key.der" "key.pem" "account_key.json"
+          "fullchain.pem" "full.pem" "key.der" "key.pem" "account_key.json" "account_reg.json"
         ]);
-        default = [ "fullchain.pem" "full.pem" "key.pem" "account_key.json" ];
+        default = [ "fullchain.pem" "full.pem" "key.pem" "account_key.json" "account_reg.json" ];
         description = ''
           Plugins to enable. With default settings simp_le will
           store public certificate bundle in <filename>fullchain.pem</filename>,
@@ -198,7 +198,7 @@ in
                           ++ optionals (data.email != null) [ "--email" data.email ]
                           ++ concatMap (p: [ "-f" p ]) data.plugins
                           ++ concatLists (mapAttrsToList (name: root: [ "-d" (if root == null then name else "${name}:${root}")]) data.extraDomains)
-                          ++ optionals (!cfg.production) ["--server" "https://acme-staging.api.letsencrypt.org/directory"];
+                          ++ optionals (!cfg.production) ["--server" "https://acme-staging-v02.api.letsencrypt.org/directory"];
                 acmeService = {
                   description = "Renew ACME Certificate for ${cert}";
                   after = [ "network.target" "network-online.target" ];
