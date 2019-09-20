@@ -46,6 +46,24 @@ with lib;
       '';
     };
 
+    listenAddress = mkOption { 
+      type = types.str;
+      description = ''
+        IPv4 address to listen to. Defaults to 0.0.0.0.
+        If you need more options, use <option>listen</option>.
+      '';
+      default = "0.0.0.0";
+    };
+
+    listenAddress6 = mkOption { 
+      type = types.str;
+      description = ''
+        IPv6 address to listen to. Defaults to [::].
+        If you need more options, use <option>listen</option>.
+      '';
+      default = "[::]";
+    };
+
     enableACME = mkOption {
       type = types.bool;
       default = false;

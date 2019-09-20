@@ -184,11 +184,11 @@ let
         defaultListen =
           if vhost.listen != [] then vhost.listen
           else ((optionals hasSSL (
-            singleton                    { addr = "0.0.0.0"; port = 443; ssl = true; }
-            ++ optional enableIPv6 { addr = "[::]";    port = 443; ssl = true; }
+            singleton                    { addr = vhost.listenAddress; port = 443; ssl = true; }
+            ++ optional enableIPv6 { addr = vhost.listenAddress6;    port = 443; ssl = true; }
           )) ++ optionals (!onlySSL) (
-            singleton                    { addr = "0.0.0.0"; port = 80;  ssl = false; }
-            ++ optional enableIPv6 { addr = "[::]";    port = 80;  ssl = false; }
+            singleton                    { addr = vhost.listenAddress; port = 80;  ssl = false; }
+            ++ optional enableIPv6 { addr = vhost.listenAddress6;    port = 80;  ssl = false; }
           ));
 
         hostListen =
