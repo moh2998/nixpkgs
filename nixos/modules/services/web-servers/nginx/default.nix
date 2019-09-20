@@ -652,6 +652,7 @@ in
       wantedBy = [ "multi-user.target" ];
       wants = concatLists (map (vhostConfig: ["acme-${vhostConfig.serverName}.service" "acme-selfsigned-${vhostConfig.serverName}.service"]) acmeEnabledVhosts);
       after = [ "network.target" ] ++ map (vhostConfig: "acme-selfsigned-${vhostConfig.serverName}.service") acmeEnabledVhosts;
+      before = map (vhostConfig: "acme-${vhostConfig.serverName}.service") acmeEnabledVhosts;
       stopIfChanged = false;
       preStart =
         ''
@@ -685,7 +686,7 @@ in
           ${pkgs.coreutils}/bin/kill -QUIT $MAINPID
         else
           # We only need to change the configuration, so update it and reload nginx
-          echo "Restart not needed, reload now"
+          echo "Reloading Nginx now"
           ln -sf ${configFile} /run/nginx/config
           ${pkgs.coreutils}/bin/kill -HUP $MAINPID
         fi

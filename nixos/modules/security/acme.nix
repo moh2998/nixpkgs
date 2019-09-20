@@ -199,6 +199,8 @@ in
                           ++ concatMap (p: [ "-f" p ]) data.plugins
                           ++ concatLists (mapAttrsToList (name: root: [ "-d" (if root == null then name else "${name}:${root}")]) data.extraDomains)
                           ++ optionals (!cfg.production) ["--server" "https://acme-staging-v02.api.letsencrypt.org/directory"];
+                acmeChallengeDir = "${data.webroot}/.well-known/acme-challenge";
+                checkFile = "up-${cert}";
                 acmeService = {
                   description = "Renew ACME Certificate for ${cert}";
                   after = [ "network.target" "network-online.target" ];
@@ -212,6 +214,29 @@ in
                     StateDirectory = lpath;
                     StateDirectoryMode = rights;
                     WorkingDirectory = "/var/lib/${lpath}";
+                    ExecStartPre = 
+                      let 
+                        script = pkgs.writeScript "acme-pre-start" ''
+                          #!${pkgs.runtimeShell} -e
+                          mkdir -p ${acmeChallengeDir}
+                          chown ${data.user}:${data.group} ${acmeChallengeDir}
+                          touch ${acmeChallengeDir}/${checkFile}
+                          for x in 1 2 3 4 5; do
+                            echo "Checking if web server is serving the challenge dir..." 
+                            ${pkgs.curl}/bin/curl --insecure --output /dev/null --silent --head --fail \
+                              https://${cert}/.well-known/acme-challenge/${checkFile} &&
+                              rm ${acmeChallengeDir}/${checkFile} &&
+                              exit 0
+
+                            sleep 1
+                          done
+
+                          echo "Web server check failed, cannot get certificate"
+                          exit 2
+                        '';
+                      in
+                        "+${script}";
+                    
                     ExecStart = "${pkgs.simp_le}/bin/simp_le ${escapeShellArgs cmdline}";
                     ExecStopPost = 
                       let
