@@ -4,23 +4,25 @@ with lib;
 
 let
   cfg = config.services.nginx;
+  certs = config.security.acme.certs;
+  vhostsConfigs = mapAttrsToList (vhostName: vhostConfig: vhostConfig) virtualHosts;
+  acmeEnabledVhosts = filter (vhostConfig: vhostConfig.enableACME && vhostConfig.useACMEHost == null) vhostsConfigs;
   virtualHosts = mapAttrs (vhostName: vhostConfig:
     let
       serverName = if vhostConfig.serverName != null
         then vhostConfig.serverName
         else vhostName;
-      acmeDirectory = config.security.acme.directory;
     in
     vhostConfig // {
       inherit serverName;
     } // (optionalAttrs vhostConfig.enableACME {
-      sslCertificate = "${acmeDirectory}/${serverName}/fullchain.pem";
-      sslCertificateKey = "${acmeDirectory}/${serverName}/key.pem";
-      sslTrustedCertificate = "${acmeDirectory}/${serverName}/full.pem";
+      sslCertificate = "${certs.${serverName}.directory}/fullchain.pem";
+      sslCertificateKey = "${certs.${serverName}.directory}/key.pem";
+      sslTrustedCertificate = "${certs.${serverName}.directory}/full.pem";
     }) // (optionalAttrs (vhostConfig.useACMEHost != null) {
-      sslCertificate = "${acmeDirectory}/${vhostConfig.useACMEHost}/fullchain.pem";
-      sslCertificateKey = "${acmeDirectory}/${vhostConfig.useACMEHost}/key.pem";
-      sslTrustedCertificate = "${acmeDirectory}/${vhostConfig.useACMEHost}/full.pem";
+      sslCertificate = "${certs.${vhostConfig.useACMEHost}.directory}/fullchain.pem";
+      sslCertificateKey = "${certs.${vhostConfig.useACMEHost}.directory}/key.pem";
+      sslTrustedCertificate = "${certs.${vhostConfig.useACMEHost}.directory}/fullchain.pem";
     })
   ) cfg.virtualHosts;
   enableIPv6 = config.networking.enableIPv6;
@@ -182,11 +184,11 @@ let
         defaultListen =
           if vhost.listen != [] then vhost.listen
           else ((optionals hasSSL (
-            singleton                    { addr = "0.0.0.0"; port = 443; ssl = true; }
-            ++ optional enableIPv6 { addr = "[::]";    port = 443; ssl = true; }
+            singleton                    { addr = vhost.listenAddress; port = 443; ssl = true; }
+            ++ optional enableIPv6 { addr = vhost.listenAddress6;    port = 443; ssl = true; }
           )) ++ optionals (!onlySSL) (
-            singleton                    { addr = "0.0.0.0"; port = 80;  ssl = false; }
-            ++ optional enableIPv6 { addr = "[::]";    port = 80;  ssl = false; }
+            singleton                    { addr = vhost.listenAddress; port = 80;  ssl = false; }
+            ++ optional enableIPv6 { addr = vhost.listenAddress6;    port = 80;  ssl = false; }
           ));
 
         hostListen =
@@ -647,8 +649,11 @@ in
 
     systemd.services.nginx = {
       description = "Nginx Web Server";
-      after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
+      wants = concatLists (map (vhostConfig: ["acme-${vhostConfig.serverName}.service" "acme-selfsigned-${vhostConfig.serverName}.service"]) acmeEnabledVhosts);
+      after = [ "network.target" ] ++ map (vhostConfig: "acme-selfsigned-${vhostConfig.serverName}.service") acmeEnabledVhosts;
+      before = map (vhostConfig: "acme-${vhostConfig.serverName}.service") acmeEnabledVhosts;
+      stopIfChanged = false;
       preStart =
         ''
         ${cfg.preStart}
@@ -681,7 +686,7 @@ in
           ${pkgs.coreutils}/bin/kill -QUIT $MAINPID
         else
           # We only need to change the configuration, so update it and reload nginx
-          echo "Restart not needed, reload now"
+          echo "Reloading Nginx now"
           ln -sf ${configFile} /run/nginx/config
           ${pkgs.coreutils}/bin/kill -HUP $MAINPID
         fi
@@ -712,8 +717,6 @@ in
 
     security.acme.certs = filterAttrs (n: v: v != {}) (
       let
-        vhostsConfigs = mapAttrsToList (vhostName: vhostConfig: vhostConfig) virtualHosts;
-        acmeEnabledVhosts = filter (vhostConfig: vhostConfig.enableACME && vhostConfig.useACMEHost == null) vhostsConfigs;
         acmePairs = map (vhostConfig: { name = vhostConfig.serverName; value = {
             user = cfg.user;
             group = lib.mkDefault cfg.group;

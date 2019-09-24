@@ -434,6 +434,8 @@ system("@systemd@/bin/systemd-tmpfiles", "--create", "--remove", "--exclude-pref
 # units.
 if (scalar(keys %unitsToReload) > 0) {
     print STDERR "reloading the following units: ", join(", ", sort(keys %unitsToReload)), "\n";
+    # FCIO: also starts dependencies of units that will be reloaded
+    system("@systemd@/bin/systemctl", "start", "--", sort(keys %unitsToReload)) == 0 or $res = 4;
     system("@systemd@/bin/systemctl", "reload", "--", sort(keys %unitsToReload)) == 0 or $res = 4;
     unlink($reloadListFile);
 }
