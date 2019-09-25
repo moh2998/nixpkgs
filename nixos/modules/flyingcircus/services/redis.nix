@@ -72,6 +72,7 @@ in
         serviceConfig = {
           LimitNOFILE = 64000;
           PermissionsStartOnly = true;
+          Restart = "always";
         };
 
         after = [ "network.target" "network-interfaces.target" ];
