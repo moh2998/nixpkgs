@@ -153,6 +153,7 @@ in {
           "${cfg.package}/bin/kibana" +
           " --config ${cfgFile}" +
           " --path.data ${cfg.dataDir}";
+        Restart = "always";
         User = "kibana";
         WorkingDirectory = cfg.dataDir;
       };
