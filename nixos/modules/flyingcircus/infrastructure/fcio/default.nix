@@ -81,6 +81,7 @@ in
   # https://github.com/NixOS/nixpkgs/issues/12833
   boot.loader.grub.device = "/dev/disk/device-by-alias/root";
   boot.loader.grub.fsIdentifier = "provided";
+  boot.loader.grub.splashImage = null;
   boot.loader.grub.gfxmodeBios = "text";
   boot.loader.grub.timeout = 3;
   boot.loader.grub.version = 2;
