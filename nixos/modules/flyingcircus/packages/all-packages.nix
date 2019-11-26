@@ -349,7 +349,6 @@ in rec {
   # The guest additions need to use the kernel we're actually building so we
   # have to callPackage them instead of using the pre-made package.
   virtualboxGuestAdditions = pkgs_18_03.callPackage "${pkgs_18_03_src}/pkgs/applications/virtualization/virtualbox/guest-additions" { kernel = linux_4_4; };
-  vulnix = pkgs.callPackage ./vulnix { };
 
   xtrabackup = pkgs_18_09.callPackage ./percona/xtrabackup.nix {
     inherit percona;

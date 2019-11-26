@@ -204,13 +204,11 @@ in {
   config = mkIf cfg.enable {
     system.activationScripts.sensu-client = ''
       install -d -o sensuclient -g service -m 775 \
-        /etc/local/sensu-client /var/tmp/sensu /var/cache/vulnix
+        /etc/local/sensu-client /var/tmp/sensu
       install -d /run/current-config/sensu ${local_sensu_configuration}
       rm -rf /run/current-config/sensu/*
       (cat ${client_json} | ${perlPackages.JSONPP}/bin/json_pp > /run/current-config/sensu/client.json) || ln -sf  ${client_json} /run/current-config/sensu/client.json
       ln -fs ${local_sensu_configuration} /run/current-config/sensu/local.d
-      install -d -o sensuclient -g service -m 775 /var/cache/vulnix
-      chown -R sensuclient:service /var/cache/vulnix
     '';
     environment.etc."local/sensu-client/README.txt".text = ''
       Put local sensu checks here.
@@ -265,7 +263,7 @@ in {
       after = [ "network.target" "network-interfaces.target" ];
       stopIfChanged = false;
       # Sensu check scripts inherit the PATH of sensu-client by default.
-      # We provide common external dependencies in sensu-check-env. 
+      # We provide common external dependencies in sensu-check-env.
       # Checks can define their own PATH in a wrapper to include other dependencies.
       path = [ sensu-check-env ];
       serviceConfig = {
@@ -371,17 +369,6 @@ in {
         notification = "Journal file too small.";
         command = "${fcsensuplugins}/bin/check_journal_file";
       };
-
-      vulnix = {
-        notification = "Security vulnerabilities in the last 6h";
-        command =
-          "NIX_REMOTE=daemon nice timeout 10m " +
-          "${vulnix}/bin/vulnix --system --cache-dir /var/cache/vulnix " +
-          "-w https://raw.githubusercontent.com/flyingcircusio/vulnix.whitelist/master/fcio-whitelist.yaml " +
-          "-w https://raw.githubusercontent.com/flyingcircusio/vulnix.whitelist/master/fcio-whitelist.toml";
-        interval = 6 * 3600;
-      };
-
       manage = {
         notification = "The FC manage job is not enabled.";
         command = "${check_timer} fc-manage";
