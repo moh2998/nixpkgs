@@ -72,7 +72,6 @@
         tree
         unzip
         vim
-        vulnix
         wget
         xfsprogs
         zlib
