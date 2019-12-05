@@ -2,3 +2,5 @@ version: "1"
 rules:
   - base: nixos-19.03
     upstream: NixOS:nixos-19.03
+  - base: nixos-19.09
+    upstream: NixOS:nixos-19.09
