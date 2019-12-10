@@ -43,6 +43,7 @@ log = logging.getLogger('fc-graylog')
 def main(ctx, api, user, password):
     graylog = requests.Session()
     graylog.auth = (user, password)
+    graylog.headers = {'X-Requested-By': 'cli'}
     graylog.api = api
     ctx.obj = graylog
 

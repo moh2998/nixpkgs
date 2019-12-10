@@ -190,7 +190,7 @@ in
         JAVA_HOME = jre;
         GRAYLOG_CONF = "${confFile}";
         GRAYLOG_PID = pidFile;
-        JAVA_OPTS = "-Djava.library.path=\${GRAYLOGCTL_DIR}/../lib/sigar -Xms${cfg.javaHeap} -Xmx${cfg.javaHeap} -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:+UseConcMarkSweepGC -XX:+CMSConcurrentMTEnabled -XX:+CMSClassUnloadingEnabled -XX:+UseParNewGC -XX:-OmitStackTraceInFastThrow";
+        JAVA_OPTS = "-Djava.library.path=${cfg.package}/lib/sigar -Xms${cfg.javaHeap} -Xmx${cfg.javaHeap} -XX:NewRatio=1 -server -XX:+ResizeTLAB -XX:+UseConcMarkSweepGC -XX:+CMSConcurrentMTEnabled -XX:+CMSClassUnloadingEnabled -XX:+UseParNewGC -XX:-OmitStackTraceInFastThrow";
       };
       path = with pkgs; [ openjdk8 which procps which ];
       serviceConfig = {
