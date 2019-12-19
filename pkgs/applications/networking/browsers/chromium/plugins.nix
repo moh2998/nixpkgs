@@ -94,17 +94,17 @@ let
         envVars.NIX_CHROMIUM_PLUGIN_PATH_WIDEVINE = "@out@/lib";
       }}
     '';
-    
+
     meta.platforms = platforms.x86_64;
   };
 
   flash = stdenv.mkDerivation rec {
-    name = "flashplayer-ppapi-${version}";
-    version = "32.0.0.207";
+    pname = "flashplayer-ppapi";
+    version = "32.0.0.293";
 
     src = fetchzip {
       url = "https://fpdownload.adobe.com/pub/flashplayer/pdc/${version}/flash_player_ppapi_linux.x86_64.tar.gz";
-      sha256 = "09bbrlnw343ygcibyjfa27r8gjdg1dcxx85d3v4v93wfi29nl789";
+      sha256 = "0rgriqdbyrzpm1bcph35bhzd5dz21yim56z93hkmbpdqg7767dwm";
       stripRoot = false;
     };
 
@@ -135,8 +135,12 @@ let
     '';
 
     dontStrip = true;
-    
-    meta.platforms = platforms.x86_64;
+
+    meta = {
+      license = stdenv.lib.licenses.unfree;
+      maintainers = with stdenv.lib.maintainers; [ taku0 ];
+      platforms = platforms.x86_64;
+    };
   };
 
 in {

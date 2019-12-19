@@ -1,15 +1,18 @@
 { stdenv, fetchurl, dovecot, openssl }:
 
 stdenv.mkDerivation rec {
-  name = "dovecot-pigeonhole-${version}";
-  version = "0.5.5";
+  pname = "dovecot-pigeonhole";
+  version = "0.5.8";
 
   src = fetchurl {
     url = "https://pigeonhole.dovecot.org/releases/2.3/dovecot-2.3-pigeonhole-${version}.tar.gz";
-    sha256 = "19a9a6rdvdlrm00k2npprj6lrikjhngnmpgg412848rb3ip11anb";
+    sha256 = "08lhfl877xm790f1mqdhvz74xqr2kkl8wpz2m6p0j6hv1kan1f4g";
   };
 
   buildInputs = [ dovecot openssl ];
+
+  patches = [
+  ];
 
   preConfigure = ''
     substituteInPlace src/managesieve/managesieve-settings.c --replace \

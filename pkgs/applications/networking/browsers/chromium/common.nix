@@ -65,7 +65,8 @@ let
     in attrs: concatStringsSep " " (attrValues (mapAttrs toFlag attrs));
 
   gnSystemLibraries = [
-    "flac" "libwebp" "libxslt" "yasm" "opus" "snappy" "libpng" "zlib"
+    "flac" "libwebp" "libxslt" "yasm" "opus" "snappy" "libpng"
+    # "zlib" # version 77 reports unresolved dependency on //third_party/zlib:zlib_config
     # "libjpeg" # fails with multiple undefined references to chromium_jpeg_*
     # "re2" # fails with linker errors
     # "ffmpeg" # https://crbug.com/731766
@@ -132,7 +133,6 @@ let
     patches = optional enableWideVine ./patches/widevine.patch ++ [
       ./patches/nix_plugin_paths_68.patch
       ./patches/remove-webp-include-69.patch
-      ./patches/jumbo-sorted.patch
       ./patches/no-build-timestamps.patch
 
       # Unfortunately, chromium regularly breaks on major updates and
@@ -230,8 +230,6 @@ let
       use_gold = true;
       gold_path = "${stdenv.cc}/bin";
       is_debug = false;
-      # at least 2X compilation speedup
-      use_jumbo_build = true;
 
       proprietary_codecs = false;
       use_sysroot = false;

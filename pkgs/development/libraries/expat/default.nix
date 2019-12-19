@@ -15,6 +15,10 @@ stdenv.mkDerivation rec {
       sha256 = "1i7bq9sp2k5348dvbfv26bprzv6ka1abf0j5ixjaff9alndm4f19";
       stripLen = 1;
     })
+    (fetchurl {
+      url = "https://raw.githubusercontent.com/vcunat/patch-mirror/master/CVE-2019-15903.patch";
+      sha256 = "0lv4392ihpk71fgaf1fz03gandqkaqisal8xrzvcqnvnq4mnmwxp";
+    })
   ];
 
   outputs = [ "out" "dev" ]; # TODO: fix referrers
