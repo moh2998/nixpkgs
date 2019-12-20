@@ -485,7 +485,7 @@ in
       '';
 
       services.telegraf.inputs.graylog = [{
-        servers = [ "${restListenUri}/system/metrics/multiple" ];
+        servers = [ "http://localhost:9003/api/system/metrics/multiple" ];
         metrics = [ "jvm.memory.total.committed"
                     "jvm.memory.total.used"
                     "jvm.threads.count"
@@ -559,6 +559,11 @@ in
         ${listenConfig glAPIHAPort}
             use_backend stats if { path_beg /admin/stats }
             default_backend graylog
+
+        listen graylog_metrics
+            bind localhost:9003
+            http-request add-header X-Requested-By Telegraf
+            server local_graylog ${listenOn}:${toString glAPIPort}
 
         backend gelf_tcp
             mode tcp
