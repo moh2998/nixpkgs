@@ -119,6 +119,12 @@ let
   grafanaJsonDashboardPath = "${config.services.grafana.dataDir}/dashboards";
   grafanaProvisioningPath = "${config.services.grafana.dataDir}/provisioning";
 
+  grafanaSecretKey = fclib.servicePassword {
+    inherit pkgs;
+    file = "${config.services.grafana.dataDir}/secret";
+    token = "grafana-secretkey-gen1";
+  };
+
 in
 {
 
@@ -491,6 +497,9 @@ in
         port = 3001;
         addr = "127.0.0.1";
         rootUrl = "http://${cfgStatsGlobal.hostName}/grafana";
+
+        security.secretKey = grafanaSecretKey.value;
+
         extraOptions = {
           AUTH_LDAP_ENABLED = "true";
           AUTH_LDAP_CONFIG_FILE = toString grafanaLdapConfig;
@@ -536,6 +545,17 @@ in
         ln -fs ${fcioDashboards} ${grafanaProvisioningPath}/dashboards/fcio.yaml
         ln -fs ${prometheusDatasource} ${grafanaProvisioningPath}/datasources/prometheus.yaml
 
+        # Purge sessions once after fixing 122385
+        if [[ ! -f "${config.services.grafana.dataDir}/.purge-case122385" ]]; then
+          rm -rf ${config.services.grafana.dataDir}/sessions/*
+          touch ${config.services.grafana.dataDir}/.purge-case122385
+        fi
+      '';
+
+      # Reset password _after_ start to ensure we immediately reset the
+      # inital insecure admin/admin password.
+      systemd.services.grafana.postStart = ''
+        ${config.services.grafana.package.bin}/bin/grafana-cli admin reset-admin-password --homepath "${config.services.grafana.dataDir}" "$(${pkgs.apg}/bin/apg -a 1 -M lnc -n 1 -m 32)"
       '';
 
       flyingcircus.roles.nginx.enable = true;

@@ -53,6 +53,7 @@ in rec {
     chromium
     elasticsearch6
     gnupg
+    grafana
     imagemagick
     kibana
     mercurial
@@ -85,7 +86,6 @@ in rec {
     firefox
     ghostscript
     git
-    grafana
     graphicsmagick
     iptables
     jbig2dec
